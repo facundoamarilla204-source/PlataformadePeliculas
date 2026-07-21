@@ -1,0 +1,60 @@
+"use client";
+
+import { Header } from "@/components/layout/Header";
+import { MovieCard } from "@/components/shared/MovieCard";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { fetchMoviesByCategory } from "@/lib/api";
+
+export default function SearchPage() {
+  const searchParams = useSearchParams();
+  const query = searchParams.get("q") || "";
+  const [results, setResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function searchMovies() {
+      setLoading(true);
+      // In MVP, we fetch all and filter client-side. In prod, the API should handle the search param.
+      const allMovies = await fetchMoviesByCategory();
+      const filtered = allMovies.filter((m: any) => 
+        m.title.toLowerCase().includes(query.toLowerCase())
+      );
+      setResults(filtered);
+      setLoading(false);
+    }
+    searchMovies();
+  }, [query]);
+
+  return (
+    <main className="w-full flex flex-col min-h-screen">
+      <Header />
+      
+      <div className="py-12 px-4 md:px-8">
+        <h1 className="text-3xl font-bold text-white mb-8">
+          Resultados para "{query}"
+        </h1>
+        
+        {loading ? (
+          <p className="text-neutral-400">Buscando...</p>
+        ) : results.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {results.map((movie) => (
+              <MovieCard
+                key={movie.id}
+                id={movie.id}
+                title={movie.title}
+                posterUrl={movie.poster_url || "https://via.placeholder.com/300x450?text=No+Poster"}
+                year={movie.release_year}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="text-neutral-400 text-lg">
+            No se encontraron películas que coincidan con tu búsqueda.
+          </p>
+        )}
+      </div>
+    </main>
+  );
+}
