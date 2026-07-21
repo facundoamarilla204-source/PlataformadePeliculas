@@ -1,10 +1,11 @@
 import { HeroBanner } from "@/components/shared/HeroBanner";
 import { MovieRow } from "@/components/shared/MovieRow";
-import { fetchFeaturedMovie, fetchMoviesByCategory, fetchCategories } from "@/lib/api";
+import { fetchFeaturedMovie, fetchMoviesByCategory, fetchCategories, recordSiteView } from "@/lib/api";
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
+  recordSiteView();
   const featured = await fetchFeaturedMovie();
   const rawCategories = await fetchCategories();
   const categoriesList = Array.isArray(rawCategories) ? rawCategories : (rawCategories?.data || []);
@@ -36,7 +37,7 @@ export default async function Home() {
     <main className="w-full flex flex-col min-h-screen pb-20">
       {featured && (
         <HeroBanner
-          id={featured.id}
+          id={featured.slug || featured.id}
           title={featured.title}
           overview={featured.overview || "Sin sinopsis disponible."}
           backdropUrl={featured.backdrop_url || "https://images.unsplash.com/photo-1574267432553-4b4628081c31?q=80&w=1920&auto=format&fit=crop"}

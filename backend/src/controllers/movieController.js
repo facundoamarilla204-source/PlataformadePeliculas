@@ -20,6 +20,30 @@ const getMovieById = async (req, res) => {
   res.json(movie);
 };
 
+const getMovieBySlug = async (req, res) => {
+  const { slug } = req.params;
+  
+  // Transform slug "nombre-de-la-pelicula" to "%nombre%de%la%pelicula%"
+  // This allows ilike to match spaces, hyphens, and missing characters.
+  const searchPattern = '%' + slug.split('-').join('%') + '%';
+
+  const { data, error } = await supabase.from('movies')
+    .select('*')
+    .ilike('title', searchPattern)
+    .limit(1);
+  
+  if (error) return res.status(500).json({ error: error.message });
+  if (!data || data.length === 0) return res.status(404).json({ error: 'Película no encontrada' });
+  
+  const movie = data[0];
+
+  // Buscar categorías asociadas
+  const { data: categories } = await supabase.from('movie_categories').select('category_id').eq('movie_id', movie.id);
+  movie.category_ids = categories ? categories.map(c => c.category_id) : [];
+
+  res.json(movie);
+};
+
 const mapMoviePayload = (body) => {
   const payload = {};
   if (body.title) payload.title = body.title;
@@ -47,6 +71,18 @@ const mapMoviePayload = (body) => {
 
   if (body.status) payload.status = body.status;
   if (body.is_featured !== undefined) payload.is_featured = body.is_featured;
+
+  // Streaming fields
+  if (body.tmdb_id !== undefined) payload.tmdb_id = body.tmdb_id ? parseInt(body.tmdb_id, 10) : null;
+  if (body.imdb_id !== undefined) payload.imdb_id = body.imdb_id || null;
+  if (body.streaming_provider !== undefined) payload.streaming_provider = body.streaming_provider;
+
+  if (body.type !== undefined) payload.type = body.type;
+  if (body.season !== undefined) payload.season = body.season ? parseInt(body.season, 10) : null;
+  if (body.episode !== undefined) payload.episode = body.episode ? parseInt(body.episode, 10) : null;
+
+  if (body.streaming_mode !== undefined) payload.streaming_mode = body.streaming_mode;
+  if (body.streaming_manual_url !== undefined) payload.streaming_manual_url = body.streaming_manual_url;
 
   return payload;
 };
@@ -110,4 +146,18 @@ const deleteMovie = async (req, res) => {
   res.status(204).send();
 };
 
-module.exports = { getAllMovies, getMovieById, createMovie, updateMovie, deleteMovie };
+const recordMovieView = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const { error } = await supabase.from('movie_views').insert([{ movie_id: id }]);
+    if (error) {
+      console.error('Error registrando vista:', error);
+      // No fallamos la petición para el frontend público
+    }
+    res.status(200).json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+module.exports = { getAllMovies, getMovieById, getMovieBySlug, createMovie, updateMovie, deleteMovie, recordMovieView };

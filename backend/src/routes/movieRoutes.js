@@ -4,7 +4,9 @@ const movieController = require('../controllers/movieController');
 const auth = require('../middleware/authMiddleware');
 
 router.get('/', movieController.getAllMovies);
+router.get('/slug/:slug', movieController.getMovieBySlug);
 router.get('/:id', movieController.getMovieById);
+router.post('/:id/view', movieController.recordMovieView);
 
 // Rutas protegidas
 router.post('/', auth, movieController.createMovie);

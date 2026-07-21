@@ -10,9 +10,10 @@ interface MovieCardHorizontalProps {
   backdropUrl: string;
   year?: number;
   duration?: string;
+  genres?: string[];
 }
 
-export function MovieCardHorizontal({ id, title, backdropUrl, year, duration = "2h 10m" }: MovieCardHorizontalProps) {
+export function MovieCardHorizontal({ id, title, backdropUrl, year, duration = "2h 10m", genres = [] }: MovieCardHorizontalProps) {
   return (
     <Link href={`/movie/${id}`} className="block w-full">
       <motion.div
@@ -41,10 +42,18 @@ export function MovieCardHorizontal({ id, title, backdropUrl, year, duration = "
 
           <div className="transform sm:translate-y-2 sm:group-hover:translate-y-0 transition-transform duration-300">
             <h3 className="text-sm md:text-lg font-bold text-foreground line-clamp-1 mb-1">{title}</h3>
-            <div className="flex items-center gap-2 text-xs text-text-secondary">
+            <div className="flex items-center gap-2 text-xs text-text-secondary mb-2">
               {year && <span>{year}</span>}
               {year && <span className="w-1 h-1 rounded-full bg-surface-hover" />}
               <span>{duration}</span>
+            </div>
+            
+            <div className="flex items-center gap-2 flex-wrap hidden sm:flex">
+              {genres.slice(0, 2).map((genre, idx) => (
+                <span key={idx} className="text-[10px] uppercase font-semibold text-primary tracking-wider bg-primary/10 px-1.5 py-0.5 rounded">
+                  {genre}
+                </span>
+              ))}
             </div>
           </div>
         </div>

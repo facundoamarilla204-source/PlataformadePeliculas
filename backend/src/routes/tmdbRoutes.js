@@ -4,6 +4,6 @@ const tmdbController = require('../controllers/tmdbController');
 const auth = require('../middleware/authMiddleware');
 
 router.get('/search', auth, tmdbController.search);
-router.get('/details/:id', auth, tmdbController.getDetails);
+router.get('/details/:id', tmdbController.getDetails);
 
 module.exports = router;

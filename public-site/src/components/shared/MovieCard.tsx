@@ -14,7 +14,7 @@ interface MovieCardProps {
   genres?: string[];
 }
 
-export function MovieCard({ id, title, posterUrl, year, duration = "2h 10m", genres = ["Acción", "Drama"] }: MovieCardProps) {
+export function MovieCard({ id, title, posterUrl, year, duration = "2h 10m", genres = [] }: MovieCardProps) {
   return (
     <Link href={`/movie/${id}`} className="block w-full">
       <motion.div

@@ -82,17 +82,21 @@ export function MovieRow({ title, movies, isHorizontalVariant = false }: MovieRo
             >
               {isHorizontalVariant ? (
                 <MovieCardHorizontal
-                  id={movie.id}
+                  id={movie.slug || movie.id}
                   title={movie.title}
                   backdropUrl={movie.backdrop_url || "https://via.placeholder.com/600x338?text=No+Background"}
                   year={movie.release_year}
+                  duration={movie.duration}
+                  genres={movie.categories}
                 />
               ) : (
                 <MovieCard
-                  id={movie.id}
+                  id={movie.slug || movie.id}
                   title={movie.title}
                   posterUrl={movie.poster_url || "https://via.placeholder.com/300x450?text=No+Poster"}
                   year={movie.release_year}
+                  duration={movie.duration}
+                  genres={movie.categories}
                 />
               )}
             </motion.div>

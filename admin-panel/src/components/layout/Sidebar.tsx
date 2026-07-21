@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Film, FolderOpen, Image as ImageIcon, Settings, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Film, FolderOpen, Image as ImageIcon, Settings, LogOut, Menu, X, Tv } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
 export const Sidebar = () => {
@@ -12,6 +12,7 @@ export const Sidebar = () => {
     { name: 'Películas', path: '/movies', icon: Film },
     { name: 'Categorías', path: '/categories', icon: FolderOpen },
     { name: 'Banners Home', path: '/banners', icon: ImageIcon },
+    { name: 'Streaming', path: '/streaming', icon: Tv },
     { name: 'Configuración', path: '/settings', icon: Settings },
   ];
 

@@ -11,6 +11,7 @@ import { MovieForm } from './features/movies/MovieForm';
 import { CategoryList } from './features/categories/CategoryList';
 import { BannerManager } from './features/banners/BannerManager';
 import { SettingsForm } from './features/settings/SettingsForm';
+import { StreamingConfig } from './features/streaming/StreamingConfig';
 
 const ProtectedRoute = () => {
   const { isAuthenticated } = useAuthStore();
@@ -32,6 +33,7 @@ function App() {
               <Route path="/movies/edit/:id" element={<MovieForm />} />
               <Route path="/categories" element={<CategoryList />} />
               <Route path="/banners" element={<BannerManager />} />
+              <Route path="/streaming" element={<StreamingConfig />} />
               <Route path="/settings" element={<SettingsForm />} />
             </Route>
           </Route>
