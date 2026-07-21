@@ -2,15 +2,24 @@
 
 import Link from "next/link";
 import { Search, Menu, PlaySquare } from "lucide-react";
-import { motion } from "framer-motion";
-import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,39 +32,66 @@ export function Header() {
     <motion.header
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className={`sticky top-0 z-50 w-full transition-colors duration-300 ${
-        isScrolled ? "bg-black/90 backdrop-blur-md shadow-md" : "bg-gradient-to-b from-black/80 to-transparent"
+      className={`fixed top-0 z-50 w-full transition-colors duration-300 ${
+        isScrolled ? "bg-[#080B12]/90 backdrop-blur-md shadow-md" : "bg-gradient-to-b from-[#080B12]/80 to-transparent"
       }`}
     >
-      <div className="flex h-16 items-center justify-between px-4 md:px-8">
-        <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-2 text-red-600 hover:text-red-500 transition">
-            <PlaySquare className="h-8 w-8" />
-            <span className="text-2xl font-bold hidden sm:inline-block tracking-tight">
+      <div className="mx-auto w-full max-w-[1600px] flex h-16 items-center justify-between px-4 md:px-8">
+        <div className="flex items-center gap-8">
+          <Link href="/" className="flex items-center gap-2 text-primary hover:text-primary-hover transition-colors">
+            <PlaySquare className="h-7 w-7" />
+            <span className="text-xl font-bold tracking-tight">
               MOVIES
             </span>
           </Link>
-          <nav className="hidden md:flex gap-4 text-sm font-medium text-neutral-300">
-            <Link href="/" className="hover:text-white transition">Inicio</Link>
-            <Link href="/search" className="hover:text-white transition">Explorar</Link>
+          <nav className="hidden md:flex gap-6 text-sm font-medium text-text-secondary">
+            <Link href="/" className="hover:text-foreground transition-colors">Inicio</Link>
+            <Link href="/category/accion" className="hover:text-foreground transition-colors">Acción</Link>
+            <Link href="/category/ciencia-ficcion" className="hover:text-foreground transition-colors">Ciencia Ficción</Link>
+            <Link href="/category/drama" className="hover:text-foreground transition-colors">Drama</Link>
           </nav>
         </div>
 
         <div className="flex items-center gap-4">
-          <form onSubmit={handleSearch} className="relative hidden sm:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar películas..."
-              className="h-9 w-64 rounded-full bg-neutral-900/50 border border-neutral-700 pl-9 pr-4 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all focus:bg-neutral-800"
-            />
-          </form>
-          <Button variant="ghost" size="icon" className="sm:hidden">
+          {/* Desktop Search */}
+          <div className="relative hidden sm:flex items-center">
+            <AnimatePresence>
+              {isSearchOpen && (
+                <motion.form 
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: "240px", opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  onSubmit={handleSearch}
+                  className="mr-2 overflow-hidden"
+                >
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Buscar películas..."
+                    autoFocus
+                    className="h-9 w-full rounded-full bg-surface border border-surface-hover pl-4 pr-4 text-sm text-foreground placeholder:text-text-secondary focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+                  />
+                </motion.form>
+              )}
+            </AnimatePresence>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-text-secondary hover:text-foreground hover:bg-transparent"
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* Mobile Search Icon */}
+          <Button variant="ghost" size="icon" className="sm:hidden text-text-secondary hover:text-foreground">
             <Search className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="md:hidden">
+
+          {/* Mobile Menu Icon */}
+          <Button variant="ghost" size="icon" className="md:hidden text-text-secondary hover:text-foreground">
             <Menu className="h-5 w-5" />
           </Button>
         </div>

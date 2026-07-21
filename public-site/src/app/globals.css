@@ -7,16 +7,20 @@
   --color-primary-hover: var(--primary-hover);
   --color-surface: var(--surface);
   --color-surface-hover: var(--surface-hover);
+  --color-text-secondary: var(--text-secondary);
+  --color-footer: var(--footer-bg);
 }
 
 @layer base {
   :root {
-    --background: #000000;
-    --foreground: #ffffff;
-    --primary: #E50914; /* Red Cinematic */
-    --primary-hover: #F40612;
-    --surface: #141414;
-    --surface-hover: #262626;
+    --background: #080B12;
+    --foreground: #F5F7FA;
+    --text-secondary: #9CA3AF;
+    --primary: #7C3AED; 
+    --primary-hover: #A78BFA;
+    --surface: #10151F;
+    --surface-hover: #171D29;
+    --footer-bg: #0B0F17;
   }
 
   body {

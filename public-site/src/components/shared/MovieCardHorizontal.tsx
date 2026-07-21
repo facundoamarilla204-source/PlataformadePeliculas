@@ -1,0 +1,54 @@
+"use client";
+
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { Play } from "lucide-react";
+
+interface MovieCardHorizontalProps {
+  id: string;
+  title: string;
+  backdropUrl: string;
+  year?: number;
+  duration?: string;
+}
+
+export function MovieCardHorizontal({ id, title, backdropUrl, year, duration = "2h 10m" }: MovieCardHorizontalProps) {
+  return (
+    <Link href={`/movie/${id}`} className="block w-full">
+      <motion.div
+        whileHover={{ scale: 1.02, y: -2 }}
+        transition={{ duration: 0.2 }}
+        className="group relative aspect-[16/9] w-full overflow-hidden rounded-md bg-surface shadow-md hover:shadow-xl transition-shadow"
+      >
+        <img
+          src={backdropUrl}
+          alt={title}
+          className="h-full w-full object-cover transition-opacity duration-300 group-hover:opacity-70"
+          loading="lazy"
+          onError={(e) => {
+            e.currentTarget.src = "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=600&auto=format&fit=crop";
+          }}
+        />
+
+        <div className="absolute inset-0 bg-gradient-to-t from-[#080B12] via-transparent to-transparent opacity-90 sm:opacity-60 sm:group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+        <div className="absolute inset-0 flex flex-col justify-end p-4">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 sm:group-hover:opacity-100 transition-all duration-300 scale-90 sm:group-hover:scale-100">
+             <div className="rounded-full bg-primary/90 p-3 shadow-lg shadow-primary/30 backdrop-blur-sm flex items-center justify-center">
+              <Play className="h-6 w-6 text-white ml-1 fill-current" />
+            </div>
+          </div>
+
+          <div className="transform sm:translate-y-2 sm:group-hover:translate-y-0 transition-transform duration-300">
+            <h3 className="text-sm md:text-lg font-bold text-foreground line-clamp-1 mb-1">{title}</h3>
+            <div className="flex items-center gap-2 text-xs text-text-secondary">
+              {year && <span>{year}</span>}
+              {year && <span className="w-1 h-1 rounded-full bg-surface-hover" />}
+              <span>{duration}</span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </Link>
+  );
+}

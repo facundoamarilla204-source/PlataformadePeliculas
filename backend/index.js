@@ -9,6 +9,8 @@ const authRoutes = require('./src/routes/authRoutes');
 const categoryRoutes = require('./src/routes/categoryRoutes');
 const movieRoutes = require('./src/routes/movieRoutes');
 const tmdbRoutes = require('./src/routes/tmdbRoutes');
+const bannerRoutes = require('./src/routes/bannerRoutes');
+const settingsRoutes = require('./src/routes/settingsRoutes');
 
 // Middleware
 app.use(cors());
@@ -19,6 +21,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/movies', movieRoutes);
 app.use('/api/tmdb', tmdbRoutes);
+app.use('/api/banners', bannerRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Health Check
 app.get('/api/health', (req, res) => {

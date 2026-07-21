@@ -1,7 +1,7 @@
 "use client";
 
-import { Header } from "@/components/layout/Header";
 import { MovieCard } from "@/components/shared/MovieCard";
+import { MovieSkeleton } from "@/components/shared/MovieSkeleton";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { fetchMoviesByCategory } from "@/lib/api";
@@ -15,7 +15,7 @@ export default function SearchPage() {
   useEffect(() => {
     async function searchMovies() {
       setLoading(true);
-      // In MVP, we fetch all and filter client-side. In prod, the API should handle the search param.
+      // In MVP, we fetch all and filter client-side.
       const allMovies = await fetchMoviesByCategory();
       const filtered = allMovies.filter((m: any) => 
         m.title.toLowerCase().includes(query.toLowerCase())
@@ -23,22 +23,29 @@ export default function SearchPage() {
       setResults(filtered);
       setLoading(false);
     }
-    searchMovies();
+    if (query) {
+      searchMovies();
+    } else {
+      setResults([]);
+      setLoading(false);
+    }
   }, [query]);
 
   return (
-    <main className="w-full flex flex-col min-h-screen">
-      <Header />
-      
-      <div className="py-12 px-4 md:px-8">
-        <h1 className="text-3xl font-bold text-white mb-8">
-          Resultados para "{query}"
+    <main className="w-full flex flex-col min-h-screen pt-24 pb-20">
+      <div className="mx-auto w-full max-w-[1600px] px-4 md:px-8">
+        <h1 className="text-3xl font-bold text-foreground mb-8">
+          {query ? `Resultados para "${query}"` : "Busca una película"}
         </h1>
         
         {loading ? (
-          <p className="text-neutral-400">Buscando...</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <MovieSkeleton key={i} />
+            ))}
+          </div>
         ) : results.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
             {results.map((movie) => (
               <MovieCard
                 key={movie.id}
@@ -50,9 +57,11 @@ export default function SearchPage() {
             ))}
           </div>
         ) : (
-          <p className="text-neutral-400 text-lg">
-            No se encontraron películas que coincidan con tu búsqueda.
-          </p>
+          <div className="text-center py-20">
+            <p className="text-text-secondary text-lg">
+              {query ? "No se encontraron películas que coincidan con tu búsqueda." : "Ingresa un término en el buscador para empezar."}
+            </p>
+          </div>
         )}
       </div>
     </main>
