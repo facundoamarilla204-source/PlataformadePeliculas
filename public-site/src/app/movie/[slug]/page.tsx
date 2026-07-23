@@ -187,7 +187,7 @@ export default async function MoviePage({ params }: { params: Promise<{ slug: st
 
             {/* Anchor button to scroll to video */}
             <a href="#video-player">
-              <Button size="lg" className="gap-2 text-lg px-8 py-6 rounded-full shadow-[0_0_20px_rgba(220,38,38,0.4)]">
+              <Button size="lg" className="gap-2 text-lg px-8 py-6 rounded-full shadow-[0_0_20px_var(--primary)] hover:shadow-[0_0_30px_var(--primary)]">
                 <Play className="h-6 w-6 fill-current" />
                 Ver Película
               </Button>

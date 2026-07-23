@@ -181,7 +181,7 @@ export function HeroBanner({ movies, settings }: HeroBannerProps) {
                   </p>
                   <div className="flex items-center gap-4">
                     <Link href={`/movie/${currentId}`}>
-                      <Button size="lg" className="gap-2 bg-primary hover:bg-primary-hover text-white transition-all duration-300 border-0 shadow-[0_0_20px_rgba(229,9,20,0.4)] hover:shadow-[0_0_30px_rgba(229,9,20,0.6)] px-8 py-6 text-lg font-bold">
+                      <Button size="lg" className="gap-2 bg-primary hover:bg-primary-hover text-white transition-all duration-300 border-0 shadow-[0_0_20px_var(--primary)] hover:shadow-[0_0_30px_var(--primary)] px-8 py-6 text-lg font-bold">
                         <Play className="h-6 w-6 fill-current" />
                         Ver Ahora
                       </Button>
