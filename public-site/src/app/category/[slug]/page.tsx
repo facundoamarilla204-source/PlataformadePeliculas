@@ -8,17 +8,18 @@ export const dynamic = 'force-dynamic';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
+import { fetchMoviesByCategory } from '@/lib/api';
+
 async function getCategoryData(slug: string) {
   try {
-    const [catRes, moviesRes] = await Promise.all([
+    const [catRes, mappedMovies] = await Promise.all([
       fetch(`${API_URL}/categories/slug/${slug}`, { cache: 'no-store' }),
-      fetch(`${API_URL}/categories/slug/${slug}/movies`, { cache: 'no-store' })
+      fetchMoviesByCategory(slug)
     ]);
 
     const category = catRes.ok ? await catRes.json() : { name: slug.replace(/-/g, ' '), slug, description: 'Catálogo de títulos cinematográficos.' };
-    const movies = moviesRes.ok ? await moviesRes.json() : [];
 
-    return { category, movies };
+    return { category, movies: mappedMovies };
   } catch (error) {
     console.error('Error fetching category data:', error);
     return {
@@ -101,11 +102,11 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
           {movies.map((movie: any) => (
             <MovieCard
               key={movie.id}
-              id={movie.id}
+              id={movie.slug || movie.id}
               title={movie.title}
               posterUrl={movie.poster_url || movie.poster_path || "https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=600&auto=format&fit=crop"}
               year={movie.release_year || (movie.release_date ? new Date(movie.release_date).getFullYear() : 2024)}
-              duration={movie.duration ? `${movie.duration} min` : "2h 00m"}
+              duration={movie.duration ? `${movie.duration}` : "2h 00m"}
             />
           ))}
         </div>

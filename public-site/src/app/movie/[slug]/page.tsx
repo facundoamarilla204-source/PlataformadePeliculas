@@ -58,7 +58,6 @@ export default async function MoviePage({ params }: { params: Promise<{ slug: st
   if (!movie) {
     return (
       <main className="w-full flex flex-col min-h-screen items-center justify-center">
-        <Header />
         <h1 className="text-3xl text-white">Película no encontrada</h1>
         <Link href="/" className="mt-4 text-red-500 hover:underline">
           Volver al inicio
@@ -97,7 +96,6 @@ export default async function MoviePage({ params }: { params: Promise<{ slug: st
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <Header />
       
       {/* SECCIÓN 1: Datos de la película (Hero) */}
       <div className="relative w-full min-h-[85vh] flex items-center mt-0 sm:mt-4 rounded-b-3xl sm:rounded-3xl overflow-hidden">

@@ -48,7 +48,7 @@ function SearchContent() {
           {results.map((movie) => (
             <MovieCard
               key={movie.id}
-              id={movie.id}
+              id={movie.slug || movie.id}
               title={movie.title}
               posterUrl={movie.poster_url || "https://via.placeholder.com/300x450?text=No+Poster"}
               year={movie.release_year}

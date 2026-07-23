@@ -72,7 +72,7 @@ export default async function TopRatedPage() {
                 </div>
               )}
               <MovieCard
-                id={movie.id}
+                id={movie.slug || movie.id}
                 title={movie.title}
                 posterUrl={movie.poster_url}
                 year={movie.release_year}
