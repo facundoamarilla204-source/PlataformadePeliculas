@@ -20,22 +20,52 @@ const getMovieById = async (req, res) => {
   res.json(movie);
 };
 
+const generateSlug = (text) => {
+  if (!text) return '';
+  return text
+    .toString()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '');
+};
+
 const getMovieBySlug = async (req, res) => {
   const { slug } = req.params;
   
-  // Transform slug "nombre-de-la-pelicula" to "%nombre%de%la%pelicula%"
-  // This allows ilike to match spaces, hyphens, and missing characters.
-  const searchPattern = '%' + slug.split('-').join('%') + '%';
-
+  // Buscar películas cuyo título empiece con la primera palabra del slug para optimizar.
+  // Si el título empieza con un caracter especial que fue removido, fallaría el LIKE, 
+  // por lo que buscamos usando un patrón más amplio si es posible.
+  const firstWord = slug.split('-')[0];
+  
   const { data, error } = await supabase.from('movies')
     .select('*')
-    .ilike('title', searchPattern)
-    .limit(1);
+    .ilike('title', `${firstWord}%`);
   
   if (error) return res.status(500).json({ error: error.message });
-  if (!data || data.length === 0) return res.status(404).json({ error: 'Película no encontrada' });
   
-  const movie = data[0];
+  // Buscar coincidencia exacta del slug
+  const movie = data ? data.find(m => generateSlug(m.title) === slug) : null;
+  
+  if (!movie) {
+    // Fallback: si no se encontró con la primera palabra (ej. el título real empieza con "¡Qué..."), 
+    // hacemos un fetch de todas o con patrón '%firstWord%' y buscamos.
+    const { data: allData } = await supabase.from('movies').select('*').ilike('title', `%${firstWord}%`);
+    const fallbackMovie = allData ? allData.find(m => generateSlug(m.title) === slug) : null;
+    
+    if (!fallbackMovie) {
+      return res.status(404).json({ error: 'Película no encontrada' });
+    }
+    
+    const { data: categories } = await supabase.from('movie_categories').select('category_id').eq('movie_id', fallbackMovie.id);
+    fallbackMovie.category_ids = categories ? categories.map(c => c.category_id) : [];
+    return res.json(fallbackMovie);
+  }
 
   // Buscar categorías asociadas
   const { data: categories } = await supabase.from('movie_categories').select('category_id').eq('movie_id', movie.id);

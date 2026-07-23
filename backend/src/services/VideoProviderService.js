@@ -209,9 +209,24 @@ const getEmbedUrl = async (movieId) => {
 
   if (error || !movie) return null;
 
-  // 2. Si el modo es manual y tiene URL, la devolvemos inmediatamente sin importar el streaming_status
+  // Helper para añadir parámetros a URLs de vimeus
+  const appendVimeusParams = (url) => {
+    if (!url || !url.includes('vimeus.com/e/')) return url;
+    try {
+      const parsedUrl = new URL(url);
+      parsedUrl.searchParams.set('title', 'CINARIS');
+      parsedUrl.searchParams.set('theme', 'purple');
+      parsedUrl.searchParams.set('font', 'v2');
+      parsedUrl.searchParams.set('splash', 'v3');
+      return parsedUrl.toString();
+    } catch (e) {
+      return url;
+    }
+  };
+
+  // 2. Si el modo es manual y tiene URL, la devolvemos añadiendo params si es de Vimeus
   if (movie.streaming_mode === 'manual' && movie.streaming_manual_url) {
-    return movie.streaming_manual_url;
+    return appendVimeusParams(movie.streaming_manual_url);
   }
 
   // 3. Para modo automático, validamos status y IDs
@@ -230,7 +245,7 @@ const getEmbedUrl = async (movieId) => {
 
   // 5. Fallback si el auto falló por alguna razón
   if (movie.streaming_manual_url) {
-    return movie.streaming_manual_url;
+    return appendVimeusParams(movie.streaming_manual_url);
   }
 
   return null;

@@ -1,8 +1,11 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 export function generateSlug(text: string): string {
+  if (!text) return '';
   return text
     .toString()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim()
     .replace(/\s+/g, '-')       // Reemplaza espacios con -
