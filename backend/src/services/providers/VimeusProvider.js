@@ -227,22 +227,24 @@ class VimeusProvider extends VideoProviderBase {
     const type = options.type || 'movie';
     const idParam = tmdbId ? `tmdb=${tmdbId}` : `imdb=${imdbId}`;
 
+    const extraParams = '&title=CINARIS&theme=purple&font=v2&splash=v3';
+
     if (type === 'tv' || type === 'series') {
       // Vimeus soporta se= y ep= para especificar el episodio exacto
       if (options.season && options.episode) {
-        return `${baseUrl}/e/serie?${idParam}&se=${options.season}&ep=${options.episode}&view_key=${this.viewKey}`;
+        return `${baseUrl}/e/serie?${idParam}&se=${options.season}&ep=${options.episode}&view_key=${this.viewKey}${extraParams}`;
       }
-      return `${baseUrl}/e/serie?${idParam}&view_key=${this.viewKey}`;
+      return `${baseUrl}/e/serie?${idParam}&view_key=${this.viewKey}${extraParams}`;
     }
     
     if (type === 'anime') {
        if (options.season && options.episode) {
-          return `${baseUrl}/e/anime?${idParam}&se=${options.season}&ep=${options.episode}&view_key=${this.viewKey}`;
+          return `${baseUrl}/e/anime?${idParam}&se=${options.season}&ep=${options.episode}&view_key=${this.viewKey}${extraParams}`;
        }
-       return `${baseUrl}/e/anime?${idParam}&view_key=${this.viewKey}`;
+       return `${baseUrl}/e/anime?${idParam}&view_key=${this.viewKey}${extraParams}`;
     }
 
-    return `${baseUrl}/e/movie?${idParam}&view_key=${this.viewKey}`;
+    return `${baseUrl}/e/movie?${idParam}&view_key=${this.viewKey}${extraParams}`;
   }
 }
 

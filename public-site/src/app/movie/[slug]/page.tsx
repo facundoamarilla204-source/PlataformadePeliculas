@@ -217,6 +217,7 @@ export default async function MoviePage({ params }: { params: Promise<{ slug: st
               className="w-full h-full border-0 absolute top-0 left-0" 
               allowFullScreen 
               allow="autoplay; fullscreen"
+              referrerPolicy="origin"
             ></iframe>
           ) : (
             <div className="text-neutral-500 flex flex-col items-center">
