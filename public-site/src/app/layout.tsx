@@ -17,12 +17,18 @@ export async function generateMetadata(): Promise<Metadata> {
     // EL TÍTULO DE LA PESTAÑA DEL NAVEGADOR ESTÁ AQUÍ:
     // Si quieres forzar un título, borra todo lo que está después de los dos puntos y pon tu texto entre comillas.
     // Ejemplo: title: "Cinaris - Películas",
-    title: "Cinaris - Películas",
+    title: settings?.seo_title || settings?.platform_name || "Plataforma de Películas",
+
     // LA DESCRIPCIÓN ESTÁ AQUÍ:
     description: settings?.seo_description || settings?.platform_description || "Disfruta del mejor catálogo de películas.",
     keywords: settings?.seo_keywords || "cine, peliculas",
     openGraph: {
       images: settings?.seo_og_image ? [settings.seo_og_image] : [],
+    },
+    icons: {
+      icon: settings?.favicon_url || "/icono.png",
+      shortcut: "/icono.png",
+      apple: "/icono.png",
     },
     robots: settings?.seo_robots || "index, follow",
     alternates: {
