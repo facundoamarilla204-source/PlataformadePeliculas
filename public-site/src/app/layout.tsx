@@ -14,7 +14,12 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: new URL(siteUrl),
+    // EL TÍTULO DE LA PESTAÑA DEL NAVEGADOR ESTÁ AQUÍ:
+    // Si quieres forzar un título, borra todo lo que está después de los dos puntos y pon tu texto entre comillas.
+    // Ejemplo: title: "Cinaris - Películas",
     title: settings?.seo_title || settings?.platform_name || "Plataforma de Películas",
+    
+    // LA DESCRIPCIÓN ESTÁ AQUÍ:
     description: settings?.seo_description || settings?.platform_description || "Disfruta del mejor catálogo de películas.",
     keywords: settings?.seo_keywords || "cine, peliculas",
     openGraph: {
