@@ -14,8 +14,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: new URL(siteUrl),
-    title: settings?.seo_title || "Plataforma de Películas",
-    description: settings?.seo_description || "Disfruta del mejor catálogo de películas.",
+    title: settings?.seo_title || settings?.platform_name || "Plataforma de Películas",
+    description: settings?.seo_description || settings?.platform_description || "Disfruta del mejor catálogo de películas.",
     keywords: settings?.seo_keywords || "cine, peliculas",
     openGraph: {
       images: settings?.seo_og_image ? [settings.seo_og_image] : [],
