@@ -9,16 +9,15 @@ const inter = Inter({ subsets: ["latin"] });
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await fetchGlobalSettings();
-  
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://cinaris.vercel.app";
 
   return {
     metadataBase: new URL(siteUrl),
     // EL TÍTULO DE LA PESTAÑA DEL NAVEGADOR ESTÁ AQUÍ:
     // Si quieres forzar un título, borra todo lo que está después de los dos puntos y pon tu texto entre comillas.
     // Ejemplo: title: "Cinaris - Películas",
-    title: settings?.seo_title || settings?.platform_name || "Plataforma de Películas",
-    
+    title: "Cinaris - Películas",
     // LA DESCRIPCIÓN ESTÁ AQUÍ:
     description: settings?.seo_description || settings?.platform_description || "Disfruta del mejor catálogo de películas.",
     keywords: settings?.seo_keywords || "cine, peliculas",
@@ -40,13 +39,14 @@ export default async function RootLayout({
   const settings = await fetchGlobalSettings();
   const categories = await fetchCategories();
   const isMaintenance = settings?.maintenance_mode === true;
-  
+
   return (
     <html lang={settings?.language || "es"} className={`${inter.className} h-full antialiased dark`}>
       <head>
         {settings?.favicon_url && <link rel="icon" href={settings.favicon_url} />}
         {settings && (
-          <style dangerouslySetInnerHTML={{ __html: `
+          <style dangerouslySetInnerHTML={{
+            __html: `
             :root {
               --background: ${settings.color_background || '#080B12'};
               --primary: ${settings.color_primary || '#7C3AED'};
