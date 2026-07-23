@@ -9,6 +9,14 @@
   --color-surface-hover: var(--surface-hover);
   --color-text-secondary: var(--text-secondary);
   --color-footer: var(--footer-bg);
+  
+  /* Admin variables */
+  --color-brand-red: #E50914;
+  --color-brand-red-hover: #B81D24;
+  --color-bg-primary: #080B12;
+  --color-bg-secondary: #10151F;
+  --color-bg-tertiary: #171D29;
+  --color-text-primary: #F5F7FA;
 }
 
 @layer base {

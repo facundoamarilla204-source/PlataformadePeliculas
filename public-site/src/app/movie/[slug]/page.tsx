@@ -1,9 +1,41 @@
 import { Header } from "@/components/layout/Header";
+import type { Metadata } from "next";
 import { fetchMovieBySlug, recordMovieView, fetchMovieStreamingUrl, fetchTMDBDetails } from "@/lib/api";
 import { Play, Star } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CastCarousel } from "@/components/shared/CastCarousel";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const resolvedParams = await params;
+  const movie = await fetchMovieBySlug(resolvedParams.slug);
+  
+  if (!movie) {
+    return {
+      title: "Película no encontrada",
+    };
+  }
+
+  const title = `${movie.title} - Ver Online`;
+  const description = movie.overview || `Disfruta de ${movie.title} y muchas más películas en nuestra plataforma.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [movie.poster_url || movie.backdrop_url],
+      type: 'video.movie',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [movie.backdrop_url || movie.poster_url],
+    }
+  };
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -46,8 +78,25 @@ export default async function MoviePage({ params }: { params: Promise<{ slug: st
   const countries = tmdbDetails?.production_countries?.map((c: any) => c.iso_3166_1).join(", ") || "N/A";
   const cast = tmdbDetails?.credits?.cast?.slice(0, 20) || [];
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Movie",
+    "name": movie.title,
+    "image": movie.poster_url || movie.backdrop_url,
+    "description": movie.overview,
+    "dateCreated": releaseDate,
+    "director": movie.director ? {
+      "@type": "Person",
+      "name": movie.director
+    } : undefined,
+  };
+
   return (
     <main className="w-full flex flex-col min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Header />
       
       {/* SECCIÓN 1: Datos de la película (Hero) */}

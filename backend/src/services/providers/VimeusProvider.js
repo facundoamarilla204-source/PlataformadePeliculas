@@ -1,5 +1,6 @@
 const axios = require('axios');
 const VideoProviderBase = require('./VideoProviderBase');
+const { decrypt } = require('../../utils/encryption');
 
 const VIMEUS_BASE_URL = 'https://vimeus.com';
 const REQUEST_TIMEOUT_MS = 10000;
@@ -21,7 +22,7 @@ class VimeusProvider extends VideoProviderBase {
   constructor(config) {
     super(config);
     this.providerName = 'Vimeus';
-    this.apiKey = config.api_key_encrypted || process.env.VIMEUS_API_KEY;
+    this.apiKey = decrypt(config.api_key_encrypted) || process.env.VIMEUS_API_KEY;
     this.viewKey = config.view_key || process.env.VIMEUS_VIEW_KEY;
     this.domain = config.domain || VIMEUS_BASE_URL;
   }

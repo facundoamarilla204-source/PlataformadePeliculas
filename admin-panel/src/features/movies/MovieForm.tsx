@@ -5,7 +5,7 @@ import api from '../../services/api';
 import { categoryService } from '../../services/categoryService';
 import type { Category } from '../../services/categoryService';
 
-type StreamingStatus = 'pending' | 'available' | 'unavailable' | 'error' | 'auth_error';
+type StreamingStatus = 'pending' | 'available' | 'available_manual' | 'available_auto' | 'unavailable' | 'error' | 'auth_error' | 'invalid_url';
 
 const statusBadgeConfig: Record<StreamingStatus, { label: string; classes: string }> = {
   available: { label: 'Disponible', classes: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },

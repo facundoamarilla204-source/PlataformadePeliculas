@@ -1,4 +1,5 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, Film, Sparkles, Filter } from 'lucide-react';
 import { MovieCard } from '@/components/shared/MovieCard';
@@ -25,6 +26,27 @@ async function getCategoryData(slug: string) {
       movies: []
     };
   }
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const { category } = await getCategoryData(slug);
+  const title = `Películas de ${category.name} - Ver Online`;
+  const description = category.description || `Explora nuestro catálogo seleccionado de películas de ${category.name} en alta definición.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+    },
+    twitter: {
+      card: 'summary',
+      title,
+      description,
+    }
+  };
 }
 
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {

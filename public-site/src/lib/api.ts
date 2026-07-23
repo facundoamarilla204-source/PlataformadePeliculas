@@ -24,16 +24,23 @@ const mapMovie = (m: any) => ({
     : []
 });
 
-export async function fetchFeaturedMovie() {
+export async function fetchFeaturedMovies() {
   try {
-    const res = await fetch(`${API_URL}/movies`, { next: { revalidate: 60 } });
-    if (!res.ok) throw new Error('Error fetching movies');
+    const res = await fetch(`${API_URL}/banners`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Error fetching banners');
     const movies = await res.json();
     
-    return movies.length > 0 ? mapMovie(movies[0]) : null;
+    // Return all featured movies
+    const featuredMovies = movies.filter((m: any) => m.is_featured);
+    // If no featured movies exist, fallback to the first movie
+    if (featuredMovies.length === 0 && movies.length > 0) {
+      return [mapMovie(movies[0])];
+    }
+    
+    return featuredMovies.map(mapMovie);
   } catch (error) {
-    console.error('fetchFeaturedMovie error:', error);
-    return null;
+    console.error('fetchFeaturedMovies error:', error);
+    return [];
   }
 }
 
@@ -127,3 +134,15 @@ export async function fetchTMDBDetails(tmdbId: number) {
     return null;
   }
 }
+
+export async function fetchGlobalSettings() {
+  try {
+    const res = await fetch(`${API_URL}/settings`, { next: { revalidate: 10 } }); // revalidate every 10 seconds for relatively fast updates
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    console.error('fetchGlobalSettings error:', error);
+    return null;
+  }
+}
+

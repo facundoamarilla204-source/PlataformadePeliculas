@@ -43,7 +43,7 @@ export function MovieRow({ title, movies, isHorizontalVariant = false }: MovieRo
   if (!movies || movies.length === 0) return null;
 
   return (
-    <div className="py-8 relative group/row">
+    <div className="py-4 relative group/row">
       <div className="mx-auto w-full max-w-[1600px] px-4 md:px-8 mb-4 flex justify-between items-end">
         <h2 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">{title}</h2>
         <button className="text-sm font-medium text-text-secondary hover:text-primary transition-colors">

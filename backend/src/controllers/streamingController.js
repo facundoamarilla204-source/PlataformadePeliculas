@@ -1,4 +1,5 @@
 const videoProviderService = require('../services/VideoProviderService');
+const { encrypt } = require('../utils/encryption');
 
 /**
  * GET /api/streaming/config
@@ -47,7 +48,11 @@ const updateConfig = async (req, res) => {
     const { provider = 'vimeus', api_key, view_key, domain, is_active } = req.body;
 
     const updates = {};
-    if (api_key !== undefined && api_key !== '') updates.api_key_encrypted = api_key;
+    if (api_key !== undefined && api_key !== '') {
+      if (!api_key.includes('********')) {
+        updates.api_key_encrypted = encrypt(api_key);
+      }
+    }
     if (view_key !== undefined && view_key !== '') updates.view_key = view_key;
     if (domain !== undefined) updates.domain = domain;
     if (is_active !== undefined) updates.is_active = is_active;
