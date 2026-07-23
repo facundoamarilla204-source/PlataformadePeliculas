@@ -81,7 +81,7 @@ export function HeroBanner({ movies, settings }: HeroBannerProps) {
                   </p>
                   <div className="flex items-center gap-4">
                     <Link href="/movie">
-                      <Button size="lg" className="gap-2 bg-primary hover:bg-primary-hover text-white transition-all duration-300 border-0 shadow-[0_0_20px_rgba(229,9,20,0.4)] hover:shadow-[0_0_30px_rgba(229,9,20,0.6)] px-8 py-6 text-lg font-bold">
+                      <Button size="lg" className="gap-2 bg-primary hover:bg-primary-hover text-white transition-all duration-300 border-0 shadow-[0_0_20px_var(--primary)] hover:shadow-[0_0_30px_var(--primary-hover)] px-8 py-6 text-lg font-bold">
                         <Play className="h-6 w-6 fill-current" />
                         Explorar Catálogo
                       </Button>
@@ -144,7 +144,7 @@ export function HeroBanner({ movies, settings }: HeroBannerProps) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.3 }}
                 >
-                  <div className="inline-block bg-primary text-white text-xs font-black px-4 py-1.5 rounded-full mb-6 uppercase tracking-widest shadow-[0_0_20px_rgba(229,9,20,0.5)]">
+                  <div className="inline-block bg-primary text-white text-xs font-black px-4 py-1.5 rounded-full mb-6 uppercase tracking-widest shadow-[0_0_20px_var(--primary)]">
                     Destacado
                   </div>
                   <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white tracking-tighter mb-4 drop-shadow-2xl">
@@ -229,7 +229,7 @@ export function HeroBanner({ movies, settings }: HeroBannerProps) {
                 onClick={() => setCurrentIndex(index)}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
                   index === currentIndex
-                    ? "w-8 bg-primary shadow-[0_0_10px_rgba(229,9,20,0.8)]"
+                    ? "w-8 bg-primary shadow-[0_0_10px_var(--primary)]"
                     : "w-2 bg-white/40 hover:bg-white/80"
                 }`}
                 aria-label={`Go to slide ${index + 1}`}

@@ -69,7 +69,7 @@ export default async function RootLayout({
             :root {
               --background: ${settings.color_background || '#080B12'};
               --primary: ${settings.color_primary || '#7C3AED'};
-              --primary-hover: ${settings.color_button || settings.color_primary || '#A78BFA'};
+              --primary-hover: color-mix(in srgb, ${settings.color_primary || '#7C3AED'} 80%, white);
             }
           `}} />
         )}
