@@ -49,6 +49,15 @@ export default async function RootLayout({
   return (
     <html lang={settings?.language || "es"} className={`${inter.className} h-full antialiased dark`}>
       <head>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-TV1XQ7NRD4"></script>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-TV1XQ7NRD4');
+          `
+        }} />
         {settings?.favicon_url && <link rel="icon" href={settings.favicon_url} />}
         {settings && (
           <style dangerouslySetInnerHTML={{
