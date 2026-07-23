@@ -53,14 +53,17 @@ const getMovieBySlug = async (req, res) => {
   const movie = data ? data.find(m => generateSlug(m.title) === slug) : null;
   
   if (!movie) {
-    // Fallback: si no se encontró con la primera palabra (ej. el título real empieza con "¡Qué..."), 
-    // hacemos un fetch de todas o con patrón '%firstWord%' y buscamos.
-    const { data: allData } = await supabase.from('movies').select('*').ilike('title', `%${firstWord}%`);
-    const fallbackMovie = allData ? allData.find(m => generateSlug(m.title) === slug) : null;
+    // Fallback: el título original puede tener acentos en la primera palabra (ej. "Posesión") 
+    // y el firstWord del slug ("posesion") no coincidirá en el ilike de Postgres.
+    // Hacemos un fetch ligero de id y title de TODAS las películas y filtramos en JS.
+    const { data: allData } = await supabase.from('movies').select('id, title');
+    const match = allData ? allData.find(m => generateSlug(m.title) === slug) : null;
     
-    if (!fallbackMovie) {
+    if (!match) {
       return res.status(404).json({ error: 'Película no encontrada' });
     }
+    
+    const { data: fallbackMovie } = await supabase.from('movies').select('*').eq('id', match.id).single();
     
     const { data: categories } = await supabase.from('movie_categories').select('category_id').eq('movie_id', fallbackMovie.id);
     fallbackMovie.category_ids = categories ? categories.map(c => c.category_id) : [];
