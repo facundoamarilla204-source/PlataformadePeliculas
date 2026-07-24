@@ -76,7 +76,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ streamingUrl }) => {
             src={activeStream.url || activeStream} 
             className="w-full h-full border-0" 
             allowFullScreen 
-            allow="autoplay; fullscreen"
+            {...{ webkitallowfullscreen: "true", mozallowfullscreen: "true" }}
+            allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
             referrerPolicy="origin"
           ></iframe>
         ) : (
