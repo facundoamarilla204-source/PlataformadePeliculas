@@ -35,7 +35,7 @@ export function Footer({ logoUrl }: { logoUrl?: string }) {
               La plataforma definitiva para explorar tus películas y series favoritas con la mejor calidad y experiencia.
             </p>
             <div className="flex items-center gap-4 mt-4">
-              <a href="#" className="text-neutral-400 hover:text-white transition-colors bg-neutral-900 p-2 rounded-full hover:bg-neutral-800">
+              <a href="https://www.instagram.com/cinarisok/" target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-white transition-colors bg-neutral-900 p-2 rounded-full hover:bg-neutral-800">
                 <Instagram className="h-5 w-5" />
               </a>
             </div>

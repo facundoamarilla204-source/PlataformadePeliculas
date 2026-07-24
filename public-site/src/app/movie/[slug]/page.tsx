@@ -1,11 +1,12 @@
 import { Header } from "@/components/layout/Header";
 import type { Metadata } from "next";
-import { fetchMovieBySlug, recordMovieView, fetchMovieStreamingUrl, fetchTMDBDetails } from "@/lib/api";
+import { fetchMovieBySlug, recordMovieView, fetchMovieStreamingUrl, fetchTMDBDetails, fetchMoviesByCategory } from "@/lib/api";
 import { Play, Star } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CastCarousel } from "@/components/shared/CastCarousel";
 import { VideoPlayer } from "@/components/shared/VideoPlayer";
+import { MovieRow } from "@/components/shared/MovieRow";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const resolvedParams = await params;
@@ -46,6 +47,7 @@ export default async function MoviePage({ params }: { params: Promise<{ slug: st
   
   let streamingUrl = null;
   let tmdbDetails = null;
+  let moreMovies: any[] = [];
 
   if (movie) {
     streamingUrl = await fetchMovieStreamingUrl(movie.id);
@@ -54,6 +56,14 @@ export default async function MoviePage({ params }: { params: Promise<{ slug: st
     if (movie.tmdb_id) {
       tmdbDetails = await fetchTMDBDetails(movie.tmdb_id);
     }
+
+    const firstCategory = movie.categories && movie.categories.length > 0 
+      ? (typeof movie.categories[0] === 'string' ? movie.categories[0] : movie.categories[0].name || movie.categories[0].slug)
+      : null;
+    
+    const catMovies = firstCategory ? await fetchMoviesByCategory(firstCategory.toLowerCase().replace(/ /g, '-')) : [];
+    const allMovies = catMovies.length > 0 ? catMovies : await fetchMoviesByCategory();
+    moreMovies = allMovies.filter((m: any) => m.id !== movie.id && m.slug !== movie.slug).slice(0, 15);
   }
 
   if (!movie) {
@@ -206,22 +216,32 @@ export default async function MoviePage({ params }: { params: Promise<{ slug: st
       )}
 
       {/* SECCIÓN: Reproductor de Video */}
-      <div id="video-player" className="w-full flex flex-col items-center py-12 px-4 sm:px-8 mb-24">
+      <div id="video-player" className="w-full flex flex-col items-center py-12 px-4 sm:px-8 mb-12">
         <h2 className="text-2xl font-bold text-white mb-6 self-start max-w-6xl mx-auto w-full">
           Reproductor
         </h2>
         
-        <div className="w-full max-w-6xl aspect-video bg-neutral-900 rounded-2xl overflow-hidden shadow-2xl border border-neutral-800 flex items-center justify-center relative">
+        <div className="w-full max-w-6xl relative">
           {streamingUrl ? (
             <VideoPlayer streamingUrl={streamingUrl} />
           ) : (
-            <div className="text-neutral-500 flex flex-col items-center">
+            <div className="w-full aspect-video bg-neutral-900 rounded-2xl overflow-hidden shadow-2xl border border-neutral-800 flex items-center justify-center text-neutral-500 flex-col relative">
               <Play className="h-16 w-16 mb-4 opacity-20" />
               <p>El video no está disponible por el momento.</p>
             </div>
           )}
         </div>
       </div>
+
+      {/* SECCIÓN: Más Títulos para ver */}
+      {moreMovies && moreMovies.length > 0 && (
+        <div className="w-full max-w-7xl mx-auto pb-16">
+          <MovieRow 
+            title="Más Títulos para ver" 
+            movies={moreMovies} 
+          />
+        </div>
+      )}
     </main>
   );
 }

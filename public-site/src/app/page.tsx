@@ -21,16 +21,16 @@ export default async function Home() {
       
       const movies = await fetchMoviesByCategory(catSlug);
       // Removed the fallback to `allMovies` so empty categories won't show all movies
-      return { id: catId, name: catName, movies: movies || [] };
+      return { id: catId, name: catName, slug: catSlug, movies: movies || [] };
     })
   );
 
   // If no categories were returned from backend, create default rows from all movies
   if (categories.length === 0 && allMovies.length > 0) {
     categories = [
-      { id: '1', name: 'Estrenos Destacados', movies: allMovies },
-      { id: '2', name: 'Películas Más Vistas', movies: allMovies },
-      { id: '3', name: 'Recomendadas Para Ti', movies: allMovies }
+      { id: '1', name: 'Estrenos Destacados', slug: 'estrenos-destacados', movies: allMovies },
+      { id: '2', name: 'Películas Más Vistas', slug: 'peliculas-mas-vistas', movies: allMovies },
+      { id: '3', name: 'Recomendadas Para Ti', slug: 'recomendadas-para-ti', movies: allMovies }
     ];
   }
 
@@ -52,11 +52,12 @@ export default async function Home() {
         <HeroBanner movies={featuredMovies || []} settings={settings} />
       )}
 
-      <div className="flex-1 mt-0 sm:-mt-12 z-10 relative space-y-4">
+      <div className="flex-1 mt-4 sm:mt-8 z-10 relative space-y-8">
         {tendenciaCategory && tendenciaCategory.movies && tendenciaCategory.movies.length > 0 && (
           <MovieRow 
             key={tendenciaCategory.id} 
             title={tendenciaCategory.name} 
+            categorySlug={tendenciaCategory.slug}
             movies={tendenciaCategory.movies} 
             isHorizontalVariant={true} 
           />
@@ -67,6 +68,7 @@ export default async function Home() {
             <MovieRow 
               key={cat.id || index} 
               title={cat.name} 
+              categorySlug={cat.slug}
               movies={cat.movies} 
               isHorizontalVariant={!tendenciaCategory && (index === 0 || cat.name === 'Estrenos Destacados')} 
             />

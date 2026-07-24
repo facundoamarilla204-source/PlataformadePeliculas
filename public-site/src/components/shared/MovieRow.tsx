@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { MovieCard } from "./MovieCard";
 import { MovieCardHorizontal } from "./MovieCardHorizontal";
@@ -11,9 +12,10 @@ interface MovieRowProps {
   title: string;
   movies: any[];
   isHorizontalVariant?: boolean;
+  categorySlug?: string;
 }
 
-export function MovieRow({ title, movies, isHorizontalVariant = false }: MovieRowProps) {
+export function MovieRow({ title, movies, isHorizontalVariant = false, categorySlug }: MovieRowProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
@@ -42,13 +44,18 @@ export function MovieRow({ title, movies, isHorizontalVariant = false }: MovieRo
 
   if (!movies || movies.length === 0) return null;
 
+  const targetSlug = categorySlug || title.replace(/🔥/g, '').trim().toLowerCase().replace(/[^a-z0-9áéíóúñ -]/g, '').replace(/ /g, '-');
+
   return (
     <div className="py-4 relative group/row">
-      <div className="mx-auto w-full max-w-[1600px] px-4 md:px-8 mb-4 flex justify-between items-end">
+      <div className="mx-auto w-full max-w-[1600px] px-4 md:px-8 mb-4 flex justify-between items-center sm:pr-12">
         <h2 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">{title}</h2>
-        <button className="text-sm font-medium text-text-secondary hover:text-primary transition-colors">
-          Ver todas
-        </button>
+        <Link 
+          href={`/category/${targetSlug}`}
+          className="text-sm font-semibold text-primary/90 hover:text-primary transition-colors flex items-center gap-1 bg-primary/10 hover:bg-primary/20 px-4 py-1.5 rounded-full mr-2 sm:mr-4"
+        >
+          Ver todas <ChevronRight className="w-4 h-4" />
+        </Link>
       </div>
 
       <div className="relative mx-auto w-full max-w-[1600px]">

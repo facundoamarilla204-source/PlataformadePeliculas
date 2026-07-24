@@ -56,34 +56,35 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
 
   return (
     <main className="w-full flex flex-col min-h-screen pb-24 pt-20 px-4 md:px-12 max-w-[1600px] mx-auto">
-      {/* Back Link */}
-      <div className="mb-6">
+      {/* Navigation Breadcrumbs */}
+      <div className="mb-6 flex items-center gap-2 text-xs sm:text-sm text-text-secondary">
         <Link 
           href="/"
-          className="inline-flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-white transition-colors bg-surface/50 px-4 py-2 rounded-full border border-surface-hover backdrop-blur-md"
+          className="inline-flex items-center gap-1.5 hover:text-white transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" /> Volver al Inicio
+          <ArrowLeft className="w-4 h-4" /> Inicio
         </Link>
+        <span>/</span>
+        <span className="text-white font-medium capitalize">{category.name}</span>
       </div>
 
       {/* Category Hero Header */}
-      <div className="relative rounded-3xl overflow-hidden bg-surface border border-surface-hover p-8 md:p-12 mb-12 shadow-2xl">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-transparent to-primary/5 pointer-events-none" />
-        <div className="relative z-10 space-y-4 max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase rounded-full tracking-wider">
-            <Sparkles className="w-3.5 h-3.5" /> Género Cinematográfico
+      <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-surface/80 via-surface to-background border border-surface-hover p-8 md:p-12 mb-12 shadow-2xl">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/15 via-primary/5 to-transparent pointer-events-none" />
+        <div className="relative z-10 space-y-3 max-w-3xl">
+          <div className="flex items-center gap-3">
+            <div className="w-1.5 h-8 bg-primary rounded-full shrink-0" />
+            <h1 className="text-3xl md:text-5xl font-black text-foreground capitalize tracking-tight">
+              {category.name}
+            </h1>
           </div>
 
-          <h1 className="text-3xl md:text-5xl font-black text-foreground capitalize tracking-tight">
-            {category.name}
-          </h1>
-
-          <p className="text-text-secondary text-sm md:text-base leading-relaxed">
-            {category.description || `Explora nuestro catálogo seleccionado de películas de ${category.name} en alta definición.`}
+          <p className="text-text-secondary text-sm md:text-base leading-relaxed pl-4">
+            {category.description || `Explora nuestra selección completa de películas en la categoría de ${category.name}.`}
           </p>
 
-          <div className="flex items-center gap-4 pt-2 text-xs text-text-secondary">
-            <span className="flex items-center gap-1.5 bg-background/60 px-3 py-1.5 rounded-lg border border-surface-hover font-semibold text-foreground">
+          <div className="flex items-center gap-4 pt-2 pl-4 text-xs text-text-secondary">
+            <span className="flex items-center gap-1.5 bg-background/80 px-3 py-1.5 rounded-lg border border-surface-hover font-semibold text-foreground">
               <Film className="w-4 h-4 text-primary" /> {movies.length} {movies.length === 1 ? 'Título disponible' : 'Títulos disponibles'}
             </span>
           </div>

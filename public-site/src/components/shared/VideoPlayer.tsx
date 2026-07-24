@@ -49,32 +49,33 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ streamingUrl }) => {
   if (streams.length === 0) return null;
 
   return (
-    <div className="w-full h-full flex flex-col relative group">
-      {/* Selector de servidores (visible on hover or always if wanted, let's keep it visible at top) */}
-      {streams.length > 1 && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 flex gap-2 p-2 bg-black/60 backdrop-blur-md rounded-full shadow-lg border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+    <div className="w-full flex flex-col gap-4 sm:gap-6">
+      {/* Selector de servidores (Fuera del video, siempre visible y accesible en mobile) */}
+      {streams.length > 0 && (
+        <div className="flex flex-wrap items-center justify-start gap-2 sm:gap-3 w-full">
           {streams.map((stream, idx) => (
             <button
               key={idx}
               onClick={() => setActiveStreamIndex(idx)}
-              className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-300 ${
+              className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 flex-1 sm:flex-none text-center flex items-center justify-center gap-2 ${
                 idx === activeStreamIndex 
-                  ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30' 
-                  : 'text-neutral-300 hover:bg-white/10'
+                  ? 'bg-primary text-white shadow-[0_0_15px_var(--primary)] border border-primary' 
+                  : 'bg-surface border border-surface-hover text-text-secondary hover:text-white hover:bg-surface-hover hover:border-white/20'
               }`}
             >
-              {stream.name || stream.provider?.charAt(0).toUpperCase() + stream.provider?.slice(1) || `Servidor ${idx + 1}`}
+              <span className="w-2 h-2 rounded-full flex-shrink-0 bg-current opacity-80" />
+              {stream.name || stream.provider?.charAt(0).toUpperCase() + stream.provider?.slice(1) || `Opción ${idx + 1}`}
             </button>
           ))}
         </div>
       )}
 
       {/* Contenedor del video */}
-      <div className="w-full h-full absolute inset-0 bg-black flex items-center justify-center">
+      <div className="w-full aspect-video relative bg-[#080B12] rounded-2xl overflow-hidden shadow-2xl border border-white/10 flex items-center justify-center">
         {(!activeStream.type || activeStream.type === 'iframe' || typeof activeStream === 'string') ? (
           <iframe 
             src={activeStream.url || activeStream} 
-            className="w-full h-full border-0" 
+            className="w-full h-full border-0 absolute inset-0" 
             allowFullScreen 
             {...{ webkitallowfullscreen: "true", mozallowfullscreen: "true" }}
             allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
@@ -84,7 +85,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ streamingUrl }) => {
           <video
             ref={videoRef}
             controls
-            className="w-full h-full border-0 bg-black outline-none"
+            className="w-full h-full border-0 bg-black outline-none absolute inset-0"
             crossOrigin="anonymous"
           />
         )}
