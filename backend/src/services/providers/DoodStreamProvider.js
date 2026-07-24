@@ -19,8 +19,8 @@ class DoodStreamProvider extends VideoProviderBase {
     try {
       if (!this.apiKey) {
         // Sin API key, el código de archivo podría funcionar pero no podemos verificarlo remotamente.
-        // Lo marcamos como no validado por seguridad
-        return { available: false, metadata: null, error: 'Falta API Key para validación remota en DoodStream' };
+        // Asumimos que es válido para no bloquear al usuario en producción si no tiene la Key.
+        return { available: true, metadata: null, error: null, warning: 'Falta API Key para validación remota en DoodStream' };
       }
 
       const response = await axios.get(`https://doodapi.com/api/file/info?key=${this.apiKey}&file_code=${serverConfig.file_code}`);

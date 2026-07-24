@@ -105,7 +105,9 @@ class VimeusProvider extends VideoProviderBase {
     }
 
     if (!this.apiKey) {
-      return { available: false, metadata: null, error: 'No se configuró la API Key (necesaria para listar).' };
+      // Asumimos que es válido para no bloquear al usuario en producción si no tiene la Key.
+      // Advertencia: Vimeus mostrará un iframe que puede fallar si la película no existe en su catálogo.
+      return { available: true, metadata: null, error: null, warning: 'No se configuró la API Key (necesaria para listar)' };
     }
 
     // Determinar el endpoint y la clave de caché

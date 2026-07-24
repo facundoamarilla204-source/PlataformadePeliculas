@@ -70,7 +70,8 @@ class GoodStreamProvider extends VideoProviderBase {
     }
 
     if (!this.apiKey) {
-      return { available: false, metadata: null, error: 'No se configuró la API Key de GoodStream.' };
+      // Asumimos que es válido para no bloquear al usuario en producción si no tiene la Key.
+      return { available: true, metadata: null, error: null, warning: 'No se configuró la API Key de GoodStream' };
     }
 
     try {
