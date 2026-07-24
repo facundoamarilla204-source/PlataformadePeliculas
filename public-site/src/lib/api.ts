@@ -55,7 +55,7 @@ export async function fetchMoviesByCategory(categorySlug?: string) {
       
     const res = await fetch(url, { next: { revalidate: 60 } });
     if (!res.ok) throw new Error('Error fetching movies');
-    let movies = await res.json();
+    const movies = await res.json();
 
     return movies.map(mapMovie);
   } catch (error) {
@@ -120,7 +120,7 @@ export async function fetchMovieStreamingUrl(id: string) {
     const res = await fetch(`${API_URL}/streaming/embed/${id}`, { cache: 'no-store' });
     if (!res.ok) return null;
     const data = await res.json();
-    return data.available ? data.embed_url : null;
+    return data.streams && data.streams.length > 0 ? data.streams : null;
   } catch (error) {
     console.error('fetchMovieStreamingUrl error:', error);
     return null;

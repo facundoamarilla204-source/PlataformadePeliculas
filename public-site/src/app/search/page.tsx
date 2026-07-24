@@ -14,6 +14,11 @@ function SearchContent() {
 
   useEffect(() => {
     async function searchMovies() {
+      if (!query) {
+        setResults([]);
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       // In MVP, we fetch all and filter client-side.
       const allMovies = await fetchMoviesByCategory();
@@ -23,12 +28,7 @@ function SearchContent() {
       setResults(filtered);
       setLoading(false);
     }
-    if (query) {
-      searchMovies();
-    } else {
-      setResults([]);
-      setLoading(false);
-    }
+    searchMovies();
   }, [query]);
 
   return (

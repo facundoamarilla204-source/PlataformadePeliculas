@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import Script from "next/script";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { fetchGlobalSettings, fetchCategories } from "@/lib/api";
@@ -51,15 +52,18 @@ export default async function RootLayout({
       <head>
         {settings?.google_analytics_id && (
           <>
-            <script async src={`https://www.googletagmanager.com/gtag/js?id=${settings.google_analytics_id}`}></script>
-            <script dangerouslySetInnerHTML={{
-              __html: `
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${settings.google_analytics_id}`}
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
                 gtag('js', new Date());
                 gtag('config', '${settings.google_analytics_id}');
-              `
-            }} />
+              `}
+            </Script>
           </>
         )}
         {settings?.favicon_url && <link rel="icon" href={settings.favicon_url} />}

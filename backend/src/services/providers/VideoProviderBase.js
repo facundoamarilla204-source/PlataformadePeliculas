@@ -23,7 +23,7 @@ class VideoProviderBase {
    * @param {object} options - { type: 'movie'|'tv', season: number, episode: number }
    * @returns {Promise<{ available: boolean, metadata: object|null, error: string|null }>}
    */
-  async checkAvailability(tmdbId, imdbId, options = {}) {
+  async checkAvailability(tmdbId, imdbId, serverConfig = {}, options = {}) {
     throw new Error('checkAvailability() debe ser implementado por el proveedor concreto.');
   }
 
@@ -35,7 +35,7 @@ class VideoProviderBase {
    * @param {object} options - { type: 'movie'|'tv', season: number, episode: number }
    * @returns {string|null}
    */
-  buildEmbedUrl(tmdbId, imdbId, options = {}) {
+  buildEmbedUrl(tmdbId, imdbId, serverConfig = {}, options = {}) {
     throw new Error('buildEmbedUrl() debe ser implementado por el proveedor concreto.');
   }
 

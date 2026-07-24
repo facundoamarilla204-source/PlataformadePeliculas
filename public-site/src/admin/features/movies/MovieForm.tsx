@@ -5,19 +5,10 @@ import { Search, Save, X, Image as ImageIcon, Check, Loader2, Tv, RefreshCw } fr
 import api from '../../services/api';
 import { categoryService } from '../../services/categoryService';
 import type { Category } from '../../services/categoryService';
+import { ServerManager } from './ServerManager';
+import type { MovieServer } from './ServerManager';
 
-type StreamingStatus = 'pending' | 'available' | 'available_manual' | 'available_auto' | 'unavailable' | 'error' | 'auth_error' | 'invalid_url';
 
-const statusBadgeConfig: Record<StreamingStatus, { label: string; classes: string }> = {
-  available: { label: 'Disponible', classes: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
-  available_manual: { label: 'Disponible (Modo Manual)', classes: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
-  available_auto: { label: 'Disponible (Modo Automático)', classes: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
-  unavailable: { label: 'No disponible', classes: 'bg-red-500/15 text-red-400 border-red-500/30' },
-  pending: { label: 'Pendiente de verificar', classes: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30' },
-  error: { label: 'Error de conexión / Reproducción', classes: 'bg-orange-500/15 text-orange-400 border-orange-500/30' },
-  auth_error: { label: 'Error de autenticación', classes: 'bg-gray-500/15 text-gray-400 border-gray-500/30' },
-  invalid_url: { label: 'Enlace inválido', classes: 'bg-orange-500/15 text-orange-400 border-orange-500/30' },
-};
 
 export const MovieForm = () => {
   const params = useParams();
@@ -41,15 +32,10 @@ export const MovieForm = () => {
     season: '' as string | number,
     episode: '' as string | number,
     category_ids: [] as string[],
-    streaming_provider: 'none',
-    streaming_status: 'pending' as StreamingStatus | 'available_manual' | 'available_auto' | 'invalid_url',
-    streaming_mode: 'auto' as 'auto' | 'manual',
-    streaming_manual_url: '',
-    streaming_last_checked: null as string | null,
-    streaming_last_result: null as any,
   });
 
   const [categories, setCategories] = useState<Category[]>([]);
+  const [servers, setServers] = useState<MovieServer[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -78,18 +64,24 @@ export const MovieForm = () => {
       setFormData(prev => ({
         ...prev,
         ...data,
+        title: data.title || '',
+        overview: data.overview || '',
+        release_date: data.release_date || '',
+        poster_path: data.poster_path || '',
+        backdrop_path: data.backdrop_path || '',
+        rating: data.rating || 0,
+        video_url: data.video_url || '',
+        duration: data.duration || 0,
+        tmdb_id: data.tmdb_id || null,
         imdb_id: data.imdb_id || '',
         type: data.type || 'movie',
         season: data.season || '',
         episode: data.episode || '',
         category_ids: data.category_ids || [],
-        streaming_provider: data.streaming_provider || 'none',
-        streaming_status: data.streaming_status || 'pending',
-        streaming_mode: data.streaming_mode || 'auto',
-        streaming_manual_url: data.streaming_manual_url || '',
-        streaming_last_checked: data.streaming_last_checked || null,
-        streaming_last_result: data.streaming_last_result || null,
       }));
+      
+      const { data: serversData } = await api.get(`/movies/${id}/servers`);
+      setServers(serversData || []);
     } catch (error) {
       console.error('Error cargando película:', error);
     }
@@ -119,14 +111,14 @@ export const MovieForm = () => {
 
     setFormData(prev => ({
       ...prev,
-      title: tmdbMovie.title,
-      overview: tmdbMovie.overview,
-      release_date: tmdbMovie.release_date,
+      title: tmdbMovie.title || '',
+      overview: tmdbMovie.overview || '',
+      release_date: tmdbMovie.release_date || '',
       poster_path: tmdbMovie.poster_path ? `https://image.tmdb.org/t/p/w500${tmdbMovie.poster_path}` : '',
       backdrop_path: tmdbMovie.backdrop_path ? `https://image.tmdb.org/t/p/w1280${tmdbMovie.backdrop_path}` : '',
-      rating: tmdbMovie.vote_average,
-      tmdb_id: tmdbMovie.id,
-      imdb_id: imdbId,
+      rating: tmdbMovie.vote_average || 0,
+      tmdb_id: tmdbMovie.id || null,
+      imdb_id: imdbId || '',
     }));
     setSearchResults([]);
     setSearchQuery('');
@@ -143,115 +135,13 @@ export const MovieForm = () => {
     });
   };
 
-  const handleCheckStreaming = async () => {
-    if (formData.streaming_mode === 'manual') {
-      if (!formData.streaming_manual_url) {
-        alert('Debes ingresar la URL manual para verificar.');
-        return;
-      }
-      setIsCheckingStreaming(true);
-      try {
-        const { data } = await api.post(`/streaming/check-manual`, { url: formData.streaming_manual_url });
-        if (data.valid) {
-          setFormData(prev => ({
-            ...prev,
-            streaming_status: 'available_manual',
-            streaming_last_checked: new Date().toISOString(),
-            streaming_last_result: { message: 'URL manual válida' }
-          }));
-        } else {
-          setFormData(prev => ({
-            ...prev,
-            streaming_status: 'invalid_url',
-            streaming_last_checked: new Date().toISOString(),
-            streaming_last_result: { error: data.error }
-          }));
-          alert(`Enlace inválido: ${data.error}`);
-        }
-      } catch (error: any) {
-        alert('Error al validar la URL manual');
-      } finally {
-        setIsCheckingStreaming(false);
-      }
-      return;
-    }
 
-    // Modo automático
-    if (!formData.tmdb_id && !formData.imdb_id) {
-      alert('Debes ingresar al menos el TMDb ID o IMDb ID para verificar.');
-      return;
-    }
-    
-    setIsCheckingStreaming(true);
-    try {
-      if (id) {
-        // Película guardada: actualizar en base de datos también
-        const { data } = await api.post(`/streaming/check/${id}`);
-        setFormData(prev => ({
-          ...prev,
-          streaming_status: data.status === 'available' ? 'available_auto' : data.status,
-          streaming_last_checked: data.last_checked || new Date().toISOString(),
-          streaming_last_result: data,
-        }));
-      } else {
-        // Película nueva: solo verificar al vuelo
-        const payload = {
-          tmdb_id: formData.tmdb_id,
-          imdb_id: formData.imdb_id,
-          type: formData.type,
-          season: formData.season,
-          episode: formData.episode,
-          provider: 'vimeus' // Por ahora vimeus fijo
-        };
-        const { data } = await api.post(`/streaming/check-external`, payload);
-        
-        setFormData(prev => ({
-          ...prev,
-          streaming_status: data.status === 'available' ? 'available_auto' : data.status,
-          streaming_last_checked: data.last_checked || new Date().toISOString(),
-          streaming_last_result: data.details || data,
-          streaming_provider: data.status === 'available' ? 'vimeus' : prev.streaming_provider,
-        }));
-      }
-    } catch (error: any) {
-      const errorMsg = error.response?.data?.error || 'Error al verificar disponibilidad';
-      setFormData(prev => ({
-        ...prev,
-        streaming_status: 'error',
-        streaming_last_checked: new Date().toISOString(),
-        streaming_last_result: { error: errorMsg },
-      }));
-      alert(errorMsg);
-    } finally {
-      setIsCheckingStreaming(false);
-    }
-  };
-
-  const handleTestPlayer = () => {
-    let embedUrl = '';
-    
-    if (formData.streaming_mode === 'manual') {
-      if (!formData.streaming_manual_url || formData.streaming_status === 'invalid_url') {
-        alert('Debes ingresar una URL manual válida primero.');
-        return;
-      }
-      embedUrl = formData.streaming_manual_url;
-    } else {
-      // Automatic preview would require backend generating URL or trusting standard generation if available
-      alert('Para probar el reproductor automático, asegúrate de haber guardado la película y usa el sitio público.');
-      return;
-    }
-
-    if (embedUrl) {
-      window.open(embedUrl, '_blank', 'width=800,height=600');
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.streaming_status.toString().startsWith('available')) {
-      const confirmSave = window.confirm('Esta película no tiene un proveedor de streaming configurado o válido (estado: ' + formData.streaming_status + '). ¿Estás seguro que deseas guardarla y publicarla?');
+    if (servers.length === 0) {
+      const confirmSave = window.confirm('Esta película no tiene un servidor configurado. ¿Deseas guardarla igual?');
       if (!confirmSave) return;
     }
 
@@ -259,8 +149,10 @@ export const MovieForm = () => {
     try {
       if (isEditing) {
         await api.put(`/movies/${id}`, formData);
+        await api.put(`/movies/${id}/servers`, servers);
       } else {
-        await api.post('/movies', formData);
+        const { data } = await api.post('/movies', formData);
+        await api.put(`/movies/${data.id}/servers`, servers);
       }
       navigate('/movies');
     } catch (error) {
@@ -271,7 +163,7 @@ export const MovieForm = () => {
     }
   };
 
-  const currentBadge = (statusBadgeConfig as any)[formData.streaming_status] || statusBadgeConfig.pending;
+
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -496,114 +388,13 @@ export const MovieForm = () => {
               <Tv className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">Streaming</h3>
-              <p className="text-xs text-text-secondary">Información del proveedor de reproducción</p>
+              <h3 className="text-lg font-bold text-white">Servidores de Reproducción</h3>
+              <p className="text-xs text-text-secondary">Configuración multi-servidor y proveedores independientes</p>
             </div>
-            {/* Badge de estado */}
-            <span className={`ml-auto inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${currentBadge.classes}`}>
-              {currentBadge.label}
-            </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-text-secondary">Modo de Reproducción</label>
-              <select
-                value={formData.streaming_mode}
-                onChange={(e) => setFormData({...formData, streaming_mode: e.target.value as 'auto' | 'manual'})}
-                className="w-full px-4 py-2 border border-gray-700 rounded-lg bg-bg-tertiary text-text-primary focus:outline-none focus:border-brand-red"
-              >
-                <option value="auto">Automático</option>
-                <option value="manual">Manual (Fallback)</option>
-              </select>
-            </div>
-
-            {formData.streaming_mode === 'manual' ? (
-              <div className="space-y-2 md:col-span-2">
-                <label className="block text-sm font-medium text-text-secondary">URL Manual (Embed URL oficial de Vimeus)</label>
-                <input
-                  type="url"
-                  value={formData.streaming_manual_url}
-                  onChange={(e) => setFormData({...formData, streaming_manual_url: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-700 rounded-lg bg-bg-tertiary text-text-primary focus:outline-none focus:border-brand-red font-mono"
-                  placeholder="https://vimeus.com/e/movie?tmdb=...&view_key=..."
-                />
-              </div>
-            ) : null}
-
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-text-secondary">TMDb ID</label>
-              <input
-                type="number"
-                value={formData.tmdb_id || ''}
-                onChange={(e) => setFormData({...formData, tmdb_id: e.target.value ? parseInt(e.target.value) : null})}
-                className="w-full px-4 py-2 border border-gray-700 rounded-lg bg-bg-tertiary text-text-primary focus:outline-none focus:border-brand-red font-mono disabled:opacity-50"
-                placeholder="Ej: 550"
-                disabled={formData.streaming_mode === 'manual'}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-text-secondary">IMDb ID</label>
-              <input
-                type="text"
-                value={formData.imdb_id}
-                onChange={(e) => setFormData({...formData, imdb_id: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-700 rounded-lg bg-bg-tertiary text-text-primary focus:outline-none focus:border-brand-red font-mono disabled:opacity-50"
-                placeholder="Ej: tt0137523"
-                disabled={formData.streaming_mode === 'manual'}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-text-secondary">Proveedor</label>
-              <div className="px-4 py-2 border border-gray-700 rounded-lg bg-bg-tertiary text-text-primary">
-                {formData.streaming_provider === 'none' ? 'Ninguno' : formData.streaming_provider.charAt(0).toUpperCase() + formData.streaming_provider.slice(1)}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-text-secondary">Última verificación</label>
-              <div className="px-4 py-2 border border-gray-700 rounded-lg bg-bg-tertiary text-text-primary">
-                {formData.streaming_last_checked
-                  ? new Date(formData.streaming_last_checked).toLocaleString('es-AR')
-                  : 'Nunca'}
-              </div>
-            </div>
-
-            {formData.streaming_last_result && (
-              <div className="space-y-2 md:col-span-2">
-                <label className="block text-sm font-medium text-text-secondary">Resultado de la última consulta</label>
-                <pre className="px-4 py-3 border border-gray-700 rounded-lg bg-bg-tertiary text-xs text-text-secondary overflow-auto max-h-32 font-mono">
-                  {JSON.stringify(formData.streaming_last_result, null, 2)}
-                </pre>
-              </div>
-            )}
-          </div>
-
-          {/* Botones de acción de streaming */}
-          <div className="mt-6 flex flex-wrap justify-start gap-4">
-            <button
-              type="button"
-              onClick={handleCheckStreaming}
-              disabled={isCheckingStreaming || (formData.streaming_mode === 'auto' && !formData.tmdb_id && !formData.imdb_id)}
-              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isCheckingStreaming ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <RefreshCw className="w-5 h-5" />
-              )}
-              {isCheckingStreaming ? 'Verificando...' : 'Verificar enlace'}
-            </button>
-            <button
-              type="button"
-              onClick={handleTestPlayer}
-              className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-5 py-2.5 rounded-lg font-medium transition-colors"
-            >
-              <Tv className="w-5 h-5" />
-              Probar reproductor
-            </button>
+          <div className="mt-8">
+            <ServerManager servers={servers} onChange={setServers} movieData={formData} />
           </div>
         </div>
 

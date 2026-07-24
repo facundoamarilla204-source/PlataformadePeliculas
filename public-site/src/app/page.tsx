@@ -19,7 +19,7 @@ export default async function Home() {
       const catSlug = typeof cat === 'string' ? cat.toLowerCase().replace(/ /g, '-') : (cat.slug || catName.toLowerCase().replace(/ /g, '-'));
       const catId = typeof cat === 'string' ? `cat-${index}` : cat.id || `cat-${index}`;
       
-      let movies = await fetchMoviesByCategory(catSlug);
+      const movies = await fetchMoviesByCategory(catSlug);
       // Removed the fallback to `allMovies` so empty categories won't show all movies
       return { id: catId, name: catName, movies: movies || [] };
     })

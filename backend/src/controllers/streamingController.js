@@ -126,8 +126,8 @@ const checkMovieAvailability = async (req, res) => {
  */
 const checkExternalAvailability = async (req, res) => {
   try {
-    const { tmdb_id, imdb_id, type, season, episode, provider } = req.body;
-    const result = await videoProviderService.checkExternalAvailability(tmdb_id, imdb_id, type, season, episode, provider);
+    const { tmdb_id, imdb_id, type, season, episode, provider, config } = req.body;
+    const result = await videoProviderService.checkExternalAvailability(tmdb_id, imdb_id, type, season, episode, provider, config);
 
     res.json(result);
   } catch (error) {
@@ -147,16 +147,16 @@ const checkExternalAvailability = async (req, res) => {
 const getEmbedUrl = async (req, res) => {
   try {
     const { movieId } = req.params;
-    const embedUrl = await videoProviderService.getEmbedUrl(movieId);
+    const streams = await videoProviderService.getEmbedUrl(movieId);
 
-    if (!embedUrl) {
-      return res.json({ available: false, embed_url: null });
+    if (!streams || streams.length === 0) {
+      return res.json({ available: false, streams: [] });
     }
 
-    res.json({ available: true, embed_url: embedUrl });
+    res.json({ available: true, streams });
   } catch (error) {
     console.error('[StreamingController] getEmbedUrl error:', error);
-    res.json({ available: false, embed_url: null });
+    res.json({ available: false, streams: [] });
   }
 };
 

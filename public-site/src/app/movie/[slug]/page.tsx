@@ -5,6 +5,7 @@ import { Play, Star } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CastCarousel } from "@/components/shared/CastCarousel";
+import { VideoPlayer } from "@/components/shared/VideoPlayer";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const resolvedParams = await params;
@@ -212,13 +213,7 @@ export default async function MoviePage({ params }: { params: Promise<{ slug: st
         
         <div className="w-full max-w-6xl aspect-video bg-neutral-900 rounded-2xl overflow-hidden shadow-2xl border border-neutral-800 flex items-center justify-center relative">
           {streamingUrl ? (
-            <iframe 
-              src={streamingUrl} 
-              className="w-full h-full border-0 absolute top-0 left-0" 
-              allowFullScreen 
-              allow="autoplay; fullscreen"
-              referrerPolicy="origin"
-            ></iframe>
+            <VideoPlayer streamingUrl={streamingUrl} />
           ) : (
             <div className="text-neutral-500 flex flex-col items-center">
               <Play className="h-16 w-16 mb-4 opacity-20" />

@@ -3,39 +3,24 @@ const VimeusProvider = require('./providers/VimeusProvider');
 
 /**
  * VideoProviderService — Fachada/Factory para proveedores de streaming.
- * 
- * Responsabilidades:
- * - Lee la configuración de streaming_config en Supabase.
- * - Instancia el provider correcto según la configuración activa.
- * - Expone métodos genéricos que el resto del sistema consume.
- * - Implementa caché inteligente para evitar consultas innecesarias.
- * - Nunca expone credenciales fuera del servicio.
- * 
- * Para agregar un nuevo proveedor:
- * 1. Crear una clase que extienda VideoProviderBase (ej: BunnyProvider.js)
- * 2. Registrarla en el mapa PROVIDER_MAP aquí abajo
- * 3. Insertar un registro en streaming_config con el provider name
  */
 
 // Registro de proveedores disponibles
 const PROVIDER_MAP = {
   vimeus: VimeusProvider,
-  // bunny: BunnyProvider,    // Futuro
-  // mux: MuxProvider,        // Futuro
-  // cloudflare: CloudflareProvider, // Futuro
+  goodstream: require('./providers/GoodStreamProvider'),
+  doodstream: require('./providers/DoodStreamProvider'),
+  filemoon: require('./providers/DoodStreamProvider'),
+  streamtape: require('./providers/DoodStreamProvider'),
 };
 
 // Caché de configuración (se invalida cada 5 minutos)
 let _configCache = null;
 let _configCacheTime = 0;
-const CONFIG_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
-
-// Caché de disponibilidad (24h por película)
-const AVAILABILITY_CACHE_HOURS = 24;
+const CONFIG_CACHE_TTL_MS = 5 * 60 * 1000;
 
 /**
  * Obtiene la configuración del proveedor activo desde Supabase.
- * Usa caché para no consultar en cada request.
  */
 const getActiveConfig = async () => {
   const now = Date.now();
@@ -85,7 +70,6 @@ const updateProviderConfig = async (providerName, updates) => {
     .select()
     .single();
 
-  // Invalida caché
   _configCache = null;
   _configCacheTime = 0;
 
@@ -106,13 +90,11 @@ const createProvider = (config) => {
 
 /**
  * Verifica la disponibilidad de una película en el proveedor activo.
- * Implementa caché inteligente basada en streaming_last_checked.
  */
 const checkAvailability = async (movieId) => {
-  // 1. Obtener datos de la película
   const { data: movie, error: movieError } = await supabase
     .from('movies')
-    .select('id, tmdb_id, imdb_id, streaming_status, streaming_last_checked, streaming_provider, type, season, episode, streaming_mode, streaming_manual_url')
+    .select('id, tmdb_id, imdb_id, type, season, episode')
     .eq('id', movieId)
     .single();
 
@@ -121,68 +103,18 @@ const checkAvailability = async (movieId) => {
   }
 
   if (!movie.tmdb_id && !movie.imdb_id) {
-    throw new Error('La película no tiene TMDb ID ni IMDb ID configurados. Importa los datos desde TMDb primero.');
+    throw new Error('La película no tiene TMDb ID ni IMDb ID configurados.');
   }
 
-  // 2. Verificar caché: si fue verificado hace menos de 24h, reutilizar
-  if (movie.streaming_last_checked) {
-    const lastChecked = new Date(movie.streaming_last_checked);
-    const hoursSince = (Date.now() - lastChecked.getTime()) / (1000 * 60 * 60);
-    if (hoursSince < AVAILABILITY_CACHE_HOURS && movie.streaming_status !== 'pending') {
-      return {
-        cached: true,
-        status: movie.streaming_status,
-        last_checked: movie.streaming_last_checked,
-        movie_id: movieId
-      };
-    }
-  }
-
-  // 3. Obtener proveedor activo
   const config = await getActiveConfig();
   if (!config) {
     throw new Error('No hay proveedor de streaming activo. Configura uno en Ajustes → Streaming.');
   }
 
   const provider = createProvider(config);
-
-  // 4. Consultar disponibilidad
   const options = { type: movie.type, season: movie.season, episode: movie.episode };
-  let result = { available: false, metadata: null, error: null };
-  
-  // Si está en modo manual y tiene URL válida, reportarlo como disponible
-  if (movie.streaming_mode === 'manual' && movie.streaming_manual_url) {
-     result = {
-       available: true,
-       metadata: { provider: 'vimeus', mode: 'manual' },
-       error: null
-     };
-  } else {
-     // Si está en auto, o si es manual pero no hay URL (comportamiento inesperado), intentar automático
-     result = await provider.checkAvailability(movie.tmdb_id, movie.imdb_id, options);
-     
-     // Fallback: Si el automático falló pero tenemos una URL manual guardada, usarla.
-     if (!result.available && movie.streaming_manual_url) {
-        result = {
-          available: true,
-          metadata: { provider: 'vimeus', mode: 'fallback_manual' },
-          error: null
-        };
-     }
-  }
-
-  // 5. Actualizar la película en la base de datos
-  const newStatus = result.available ? 'available' : (result.error?.includes('conexión') ? 'error' : 'unavailable');
-  
-  await supabase
-    .from('movies')
-    .update({
-      streaming_provider: config.provider,
-      streaming_status: newStatus,
-      streaming_last_checked: new Date().toISOString(),
-      streaming_last_result: result
-    })
-    .eq('id', movieId);
+  const result = await provider.checkAvailability(movie.tmdb_id, movie.imdb_id, {}, options);
+  const newStatus = result.available ? 'available' : 'unavailable';
 
   return {
     cached: false,
@@ -196,20 +128,19 @@ const checkAvailability = async (movieId) => {
 };
 
 /**
- * Genera la URL de embed para una película.
- * SOLO el backend debe llamar esto — el frontend recibe la URL final.
+ * Genera las URLs de embed para una película (devuelve array de streams).
+ * Este es el corazón del sistema de reproducción.
  */
 const getEmbedUrl = async (movieId) => {
-  // 1. Obtener datos de la película
-  const { data: movie, error } = await supabase
+  // 1. Obtener la película — SOLO columnas que existen en la tabla
+  const { data: movie, error: movieError } = await supabase
     .from('movies')
-    .select('tmdb_id, imdb_id, streaming_status, streaming_provider, type, season, episode, streaming_mode, streaming_manual_url')
+    .select('id, tmdb_id, imdb_id, type, season, episode')
     .eq('id', movieId)
     .single();
 
-  if (error || !movie) return null;
+  if (movieError || !movie) return [];
 
-  // Helper para añadir parámetros a URLs de vimeus
   const appendVimeusParams = (url) => {
     if (!url || !url.includes('vimeus.com/e/')) return url;
     try {
@@ -224,31 +155,63 @@ const getEmbedUrl = async (movieId) => {
     }
   };
 
-  // 2. Si el modo es manual y tiene URL, la devolvemos añadiendo params si es de Vimeus
-  if (movie.streaming_mode === 'manual' && movie.streaming_manual_url) {
-    return appendVimeusParams(movie.streaming_manual_url);
-  }
-
-  // 3. Para modo automático, validamos status y IDs
-  if (!movie.streaming_status || !movie.streaming_status.startsWith('available')) return null;
-  if (!movie.tmdb_id && !movie.imdb_id) return null;
-
-  // 4. Obtener proveedor para Modo Automático
-  const config = await getActiveConfig();
-  if (!config) return null;
-
-  const provider = createProvider(config);
+  const streams = [];
   const options = { type: movie.type, season: movie.season, episode: movie.episode };
-  const autoUrl = provider.buildEmbedUrl(movie.tmdb_id, movie.imdb_id, options);
-  
-  if (autoUrl) return autoUrl;
 
-  // 5. Fallback si el auto falló por alguna razón
-  if (movie.streaming_manual_url) {
-    return appendVimeusParams(movie.streaming_manual_url);
+  // 2. Obtener los servidores de la tabla movie_servers
+  const { data: servers, error: serversError } = await supabase
+    .from('movie_servers')
+    .select('*')
+    .eq('movie_id', movieId)
+    .eq('is_active', true)
+    .order('priority', { ascending: true });
+
+  if (!serversError && servers && servers.length > 0) {
+    for (const server of servers) {
+      let globalConfig = await getProviderConfig(server.provider);
+      if (!globalConfig) {
+        globalConfig = { provider: server.provider, api_key_encrypted: '' };
+      }
+
+      const provider = createProvider(globalConfig);
+      const serverConfig = server.config || {};
+      let url = provider.buildEmbedUrl(movie.tmdb_id, movie.imdb_id, serverConfig, options);
+
+      if (url) {
+        if (server.provider === 'vimeus') {
+          url = appendVimeusParams(url);
+        }
+        streams.push({
+          id: server.id,
+          provider: server.provider,
+          name: server.provider.charAt(0).toUpperCase() + server.provider.slice(1),
+          url: url
+        });
+      }
+    }
   }
 
-  return null;
+  // 3. FALLBACK: Si no hay servidores en movie_servers, intentar auto con Vimeus
+  if (streams.length === 0 && (movie.tmdb_id || movie.imdb_id)) {
+    const globalConfig = await getActiveConfig();
+    if (globalConfig) {
+      const provider = createProvider(globalConfig);
+      let autoUrl = provider.buildEmbedUrl(movie.tmdb_id, movie.imdb_id, {}, options);
+      if (autoUrl) {
+        if (globalConfig.provider === 'vimeus') {
+          autoUrl = appendVimeusParams(autoUrl);
+        }
+        streams.push({
+          id: 'auto',
+          provider: globalConfig.provider,
+          name: globalConfig.provider.charAt(0).toUpperCase() + globalConfig.provider.slice(1),
+          url: autoUrl
+        });
+      }
+    }
+  }
+
+  return streams;
 };
 
 /**
@@ -263,7 +226,6 @@ const testConnection = async (providerName) => {
   const provider = createProvider(config);
   const result = await provider.testConnection();
 
-  // Guardar resultado de la prueba
   await supabase
     .from('streaming_config')
     .update({
@@ -273,7 +235,6 @@ const testConnection = async (providerName) => {
     })
     .eq('provider', providerName);
 
-  // Invalida caché
   _configCache = null;
   _configCacheTime = 0;
 
@@ -293,7 +254,6 @@ const getActiveProviderInfo = async () => {
     domain: config.domain,
     last_test_at: config.last_test_at,
     last_test_result: config.last_test_result,
-    // Enmascarar credenciales
     api_key_hint: config.api_key_encrypted ? `****${config.api_key_encrypted.slice(-4)}` : null,
     view_key_hint: config.view_key ? `****${config.view_key.slice(-4)}` : null
   };
@@ -301,54 +261,38 @@ const getActiveProviderInfo = async () => {
 
 /**
  * Verifica la disponibilidad de contenido sin depender de un registro guardado en la base de datos.
- * Útil para la UI antes de guardar una nueva película/serie.
- *
- * @param {number|null} tmdbId
- * @param {string|null} imdbId
- * @param {string} type - 'movie' o 'tv'
- * @param {number|null} season
- * @param {number|null} episode
- * @param {string} providerName - Por defecto 'vimeus'
  */
-const checkExternalAvailability = async (tmdbId, imdbId, type = 'movie', season = null, episode = null, providerName = 'vimeus') => {
-  const config = await getProviderConfig(providerName);
-  
-  if (!config) {
-    throw new Error(`Proveedor ${providerName} no configurado o inactivo.`);
+const checkExternalAvailability = async (tmdbId, imdbId, type = 'movie', season = null, episode = null, providerName = 'vimeus', serverConfig = {}) => {
+  let globalConfig = await getProviderConfig(providerName);
+  if (!globalConfig) {
+    globalConfig = { provider: providerName, api_key_encrypted: '' };
   }
 
-  const provider = createProvider(config);
+  const provider = createProvider(globalConfig);
   const options = { type, season, episode };
-  
-  const result = await provider.checkAvailability(tmdbId, imdbId, options);
-  
-  return {
-    status: result.available ? 'available' : (result.error?.includes('conexión') ? 'error' : 'unavailable'),
-    last_checked: new Date().toISOString(),
-    details: result
-  };
+
+  const result = await provider.checkAvailability(tmdbId, imdbId, serverConfig, options);
+  return result;
 };
 
 /**
- * Valida una URL de streaming manual.
+ * Valida un manual URL.
  */
-const validateManualUrl = async (url) => {
+const validateManualUrl = (url) => {
   if (!url || typeof url !== 'string') {
     return { valid: false, error: 'La URL no puede estar vacía.' };
   }
-  
+
   try {
     const parsed = new URL(url);
     if (parsed.protocol !== 'https:') {
       return { valid: false, error: 'La URL debe usar HTTPS.' };
     }
-    
-    // Validar el dominio
+
     if (!parsed.hostname.includes('vimeus.com')) {
       return { valid: false, error: 'La URL debe pertenecer al dominio oficial vimeus.com.' };
     }
-    
-    // Validar formato de Embed
+
     if (!parsed.pathname.startsWith('/e/movie') && !parsed.pathname.startsWith('/e/serie') && !parsed.pathname.startsWith('/e/anime')) {
       return { valid: false, error: 'La URL no tiene el formato correcto para un reproductor Embed (/e/).' };
     }

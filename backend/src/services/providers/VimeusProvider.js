@@ -98,7 +98,7 @@ class VimeusProvider extends VideoProviderBase {
   /**
    * Verifica si un contenido está disponible en Vimeus consultando la API Oficial paginada.
    */
-  async checkAvailability(tmdbId, imdbId, options = {}) {
+  async checkAvailability(tmdbId, imdbId, serverConfig = {}, options = {}) {
     const identifier = tmdbId || imdbId;
     if (!identifier) {
       return { available: false, metadata: null, error: 'Se requiere TMDb ID o IMDb ID para verificar disponibilidad.' };
@@ -162,8 +162,8 @@ class VimeusProvider extends VideoProviderBase {
   /**
    * Construye la URL de embed. Solo debe usarse internamente por el backend.
    */
-  buildEmbedUrl(tmdbId, imdbId, options = {}) {
-    return this._buildRawEmbedUrl(tmdbId, imdbId, options);
+  buildEmbedUrl(tmdbId, imdbId, serverConfig = {}, options = {}) {
+    return this._buildRawEmbedUrl(tmdbId, imdbId, serverConfig, options);
   }
 
   /**
@@ -217,7 +217,7 @@ class VimeusProvider extends VideoProviderBase {
    * /e/serie?tmdb={TMDB_ID}&view_key={VIEW_KEY} (o ?se={S}&ep={E})
    * /e/anime?tmdb={TMDB_ID}&view_key={VIEW_KEY}
    */
-  _buildRawEmbedUrl(tmdbId, imdbId, options = {}) {
+  _buildRawEmbedUrl(tmdbId, imdbId, serverConfig = {}, options = {}) {
     if (!this.viewKey) return null;
 
     const identifier = tmdbId || imdbId;

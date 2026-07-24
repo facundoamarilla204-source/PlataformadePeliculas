@@ -108,14 +108,10 @@ const mapMoviePayload = (body) => {
   // Streaming fields
   if (body.tmdb_id !== undefined) payload.tmdb_id = body.tmdb_id ? parseInt(body.tmdb_id, 10) : null;
   if (body.imdb_id !== undefined) payload.imdb_id = body.imdb_id || null;
-  if (body.streaming_provider !== undefined) payload.streaming_provider = body.streaming_provider;
 
   if (body.type !== undefined) payload.type = body.type;
   if (body.season !== undefined) payload.season = body.season ? parseInt(body.season, 10) : null;
   if (body.episode !== undefined) payload.episode = body.episode ? parseInt(body.episode, 10) : null;
-
-  if (body.streaming_mode !== undefined) payload.streaming_mode = body.streaming_mode;
-  if (body.streaming_manual_url !== undefined) payload.streaming_manual_url = body.streaming_manual_url;
 
   return payload;
 };
@@ -193,4 +189,38 @@ const recordMovieView = async (req, res) => {
   }
 };
 
-module.exports = { getAllMovies, getMovieById, getMovieBySlug, createMovie, updateMovie, deleteMovie, recordMovieView };
+const getMovieServers = async (req, res) => {
+  const { id } = req.params;
+  const { data, error } = await supabase
+    .from('movie_servers')
+    .select('*')
+    .eq('movie_id', id)
+    .order('priority', { ascending: true });
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+};
+
+const updateMovieServers = async (req, res) => {
+  const { id } = req.params;
+  const servers = req.body;
+  
+  // Borrar existentes
+  await supabase.from('movie_servers').delete().eq('movie_id', id);
+  
+  if (servers && servers.length > 0) {
+    const toInsert = servers.map((s, index) => ({
+      movie_id: id,
+      provider: s.provider,
+      is_active: s.is_active,
+      priority: index,
+      config: s.config
+    }));
+    const { error } = await supabase.from('movie_servers').insert(toInsert);
+    if (error) return res.status(500).json({ error: error.message });
+  }
+
+  res.json({ success: true });
+};
+
+module.exports = { getAllMovies, getMovieById, getMovieBySlug, createMovie, updateMovie, deleteMovie, recordMovieView, getMovieServers, updateMovieServers };

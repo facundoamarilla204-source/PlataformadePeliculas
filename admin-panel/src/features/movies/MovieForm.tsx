@@ -4,6 +4,8 @@ import { Search, Save, X, Image as ImageIcon, Check, Loader2, Tv, RefreshCw } fr
 import api from '../../services/api';
 import { categoryService } from '../../services/categoryService';
 import type { Category } from '../../services/categoryService';
+import { ServerManager } from './ServerManager';
+import type { MovieServer } from './ServerManager';
 
 type StreamingStatus = 'pending' | 'available' | 'available_manual' | 'available_auto' | 'unavailable' | 'error' | 'auth_error' | 'invalid_url';
 
@@ -47,6 +49,7 @@ export const MovieForm = () => {
   });
 
   const [categories, setCategories] = useState<Category[]>([]);
+  const [servers, setServers] = useState<MovieServer[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -87,6 +90,9 @@ export const MovieForm = () => {
         streaming_last_checked: data.streaming_last_checked || null,
         streaming_last_result: data.streaming_last_result || null,
       }));
+      
+      const { data: serversData } = await api.get(`/movies/${id}/servers`);
+      setServers(serversData || []);
     } catch (error) {
       console.error('Error cargando película:', error);
     }
@@ -256,8 +262,10 @@ export const MovieForm = () => {
     try {
       if (isEditing) {
         await api.put(`/movies/${id}`, formData);
+        await api.put(`/movies/${id}/servers`, servers);
       } else {
-        await api.post('/movies', formData);
+        const { data } = await api.post('/movies', formData);
+        await api.put(`/movies/${data.id}/servers`, servers);
       }
       navigate('/movies');
     } catch (error) {
@@ -576,6 +584,10 @@ export const MovieForm = () => {
                 </pre>
               </div>
             )}
+          </div>
+
+          <div className="mt-8">
+            <ServerManager servers={servers} onChange={setServers} />
           </div>
 
           {/* Botones de acción de streaming */}
